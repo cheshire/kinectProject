@@ -37,6 +37,12 @@ public:
     depth_mutex.unlock();
   }
 
+  // From nicolas.burrus.name/index.php/Research/KinectCalibration
+  void convert_depth_matrix_to_meters(Mat &mat) {
+    Mat temp(Size(640, 480), CV_32FC1, Scalar(1));
+    mat.convertTo(temp, CV_32FC1, -0.0030711016, 3.3309495161);
+    cv::pow(temp, -1.0, mat);
+  }
 
   bool getRGBDepthFrame(RGBDepthFrame &frame) {
     bool success = false;
@@ -47,6 +53,7 @@ public:
     if (new_rgb_frame && new_depth_frame) {
       cv::cvtColor(rgb_mat, frame.rgbImage, CV_RGB2BGR);
       depth_mat.copyTo(frame.depthImage);
+      convert_depth_matrix_to_meters(frame.depthImage);
       frame.timestamp = time(NULL);
       new_depth_frame = new_rgb_frame = false;
       success = true;
