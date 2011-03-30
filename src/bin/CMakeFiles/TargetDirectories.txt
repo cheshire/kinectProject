@@ -1,0 +1,2 @@
+/home/laurence/src/kinectProject/src/bin/CMakeFiles/camera.dir
+/home/laurence/src/kinectProject/src/bin/CMakeFiles/util.dir

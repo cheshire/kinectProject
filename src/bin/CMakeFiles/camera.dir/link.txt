@@ -1,0 +1,2 @@
+/usr/bin/ar cr libcamera.a  CMakeFiles/camera.dir/camera/KinectAdapter.cpp.o
+/usr/bin/ranlib libcamera.a
