@@ -12,6 +12,7 @@ SET(CMAKE_MAKEFILE_DEPENDS
   "CMakeFiles/CMakeCXXCompiler.cmake"
   "CMakeFiles/CMakeSystem.cmake"
   "../cmake/modules/Findlibfreenect.cmake"
+  "../cmake/modules/Findlibusb-1.0.cmake"
   "/usr/local/share/opencv/OpenCVConfig.cmake"
   "/usr/share/cmake-2.8/Modules/CMakeCInformation.cmake"
   "/usr/share/cmake-2.8/Modules/CMakeCXXInformation.cmake"
@@ -41,6 +42,7 @@ SET(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 SET(CMAKE_DEPEND_INFO_FILES
+  "CMakeFiles/adapter_test.dir/DependInfo.cmake"
   "CMakeFiles/camera.dir/DependInfo.cmake"
   "CMakeFiles/util.dir/DependInfo.cmake"
   )

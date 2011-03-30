@@ -10,27 +10,33 @@
 pthread.h
 -
 
-/home/laurence/src/kinectProject/src/camera/AbstractRGBDepthCamera.hpp
+/home/laurence/src/kinectProject/src/test/../camera/AbstractRGBDepthCamera.hpp
 RGBDepthFrame.hpp
-/home/laurence/src/kinectProject/src/camera/RGBDepthFrame.hpp
+/home/laurence/src/kinectProject/src/test/../camera/RGBDepthFrame.hpp
 
-/home/laurence/src/kinectProject/src/camera/KinectAdapter.cpp
-KinectAdapter.hpp
-/home/laurence/src/kinectProject/src/camera/KinectAdapter.hpp
-
-/home/laurence/src/kinectProject/src/camera/KinectAdapter.hpp
+/home/laurence/src/kinectProject/src/test/../camera/KinectAdapter.hpp
 libfreenect.hpp
-/home/laurence/src/kinectProject/src/camera/libfreenect.hpp
+/home/laurence/src/kinectProject/src/test/../camera/libfreenect.hpp
 util/Mutex.hpp
-/home/laurence/src/kinectProject/src/camera/util/Mutex.hpp
+/home/laurence/src/kinectProject/src/test/../camera/util/Mutex.hpp
 AbstractRGBDepthCamera.hpp
-/home/laurence/src/kinectProject/src/camera/AbstractRGBDepthCamera.hpp
+/home/laurence/src/kinectProject/src/test/../camera/AbstractRGBDepthCamera.hpp
 
-/home/laurence/src/kinectProject/src/camera/RGBDepthFrame.hpp
+/home/laurence/src/kinectProject/src/test/../camera/RGBDepthFrame.hpp
 ctime
 -
 cv.h
-/home/laurence/src/kinectProject/src/camera/cv.h
+/home/laurence/src/kinectProject/src/test/../camera/cv.h
+
+/home/laurence/src/kinectProject/src/test/KinectAdapterCmd.cpp
+../camera/KinectAdapter.hpp
+/home/laurence/src/kinectProject/src/test/../camera/KinectAdapter.hpp
+cv.h
+-
+cxcore.h
+-
+highgui.h
+-
 
 /home/laurence/src/libfreenect/include/libfreenect.h
 stdint.h
@@ -77,6 +83,16 @@ opencv2/core/core_c.h
 /usr/local/include/opencv/opencv2/core/core_c.h
 opencv2/core/core.hpp
 /usr/local/include/opencv/opencv2/core/core.hpp
+
+/usr/local/include/opencv/highgui.h
+opencv2/core/core_c.h
+/usr/local/include/opencv/opencv2/core/core_c.h
+opencv2/core/core.hpp
+/usr/local/include/opencv/opencv2/core/core.hpp
+opencv2/highgui/highgui_c.h
+/usr/local/include/opencv/opencv2/highgui/highgui_c.h
+opencv2/highgui/highgui.hpp
+/usr/local/include/opencv/opencv2/highgui/highgui.hpp
 
 /usr/local/include/opencv2/calib3d/calib3d.hpp
 opencv2/core/core.hpp
@@ -434,6 +450,18 @@ cstring
 
 /usr/local/include/opencv2/flann/timer.h
 time.h
+-
+
+/usr/local/include/opencv2/highgui/highgui.hpp
+opencv2/core/core.hpp
+/usr/local/include/opencv2/highgui/opencv2/core/core.hpp
+opencv2/highgui/highgui_c.h
+/usr/local/include/opencv2/highgui/opencv2/highgui/highgui_c.h
+
+/usr/local/include/opencv2/highgui/highgui_c.h
+opencv2/core/core_c.h
+/usr/local/include/opencv2/highgui/opencv2/core/core_c.h
+windows.h
 -
 
 /usr/local/include/opencv2/imgproc/imgproc.hpp

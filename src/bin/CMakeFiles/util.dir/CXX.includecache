@@ -1,0 +1,16 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/laurence/src/kinectProject/src/util/Mutex.cpp
+Mutex.hpp
+/home/laurence/src/kinectProject/src/util/Mutex.hpp
+
+/home/laurence/src/kinectProject/src/util/Mutex.hpp
+pthread.h
+-
+

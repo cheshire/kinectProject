@@ -1,2 +1,3 @@
+/home/laurence/src/kinectProject/src/bin/CMakeFiles/adapter_test.dir
 /home/laurence/src/kinectProject/src/bin/CMakeFiles/camera.dir
 /home/laurence/src/kinectProject/src/bin/CMakeFiles/util.dir

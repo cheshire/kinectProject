@@ -7,6 +7,7 @@ CMakeFiles/camera.dir/camera/KinectAdapter.cpp.o: ../camera/KinectAdapter.cpp
 CMakeFiles/camera.dir/camera/KinectAdapter.cpp.o: ../camera/KinectAdapter.hpp
 CMakeFiles/camera.dir/camera/KinectAdapter.cpp.o: ../camera/RGBDepthFrame.hpp
 CMakeFiles/camera.dir/camera/KinectAdapter.cpp.o: /home/laurence/src/libfreenect/include/libfreenect.h
+CMakeFiles/camera.dir/camera/KinectAdapter.cpp.o: /usr/local/include/libfreenect.hpp
 CMakeFiles/camera.dir/camera/KinectAdapter.cpp.o: /usr/local/include/opencv/cv.h
 CMakeFiles/camera.dir/camera/KinectAdapter.cpp.o: /usr/local/include/opencv/cxcore.h
 CMakeFiles/camera.dir/camera/KinectAdapter.cpp.o: /usr/local/include/opencv2/calib3d/calib3d.hpp

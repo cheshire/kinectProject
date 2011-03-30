@@ -50,13 +50,49 @@ CMAKE_SOURCE_DIR = /home/laurence/src/kinectProject/src
 CMAKE_BINARY_DIR = /home/laurence/src/kinectProject/src/bin
 
 #=============================================================================
+# Target rules for target CMakeFiles/adapter_test.dir
+
+# All Build rule for target.
+CMakeFiles/adapter_test.dir/all: CMakeFiles/camera.dir/all
+CMakeFiles/adapter_test.dir/all: CMakeFiles/util.dir/all
+	$(MAKE) -f CMakeFiles/adapter_test.dir/build.make CMakeFiles/adapter_test.dir/depend
+	$(MAKE) -f CMakeFiles/adapter_test.dir/build.make CMakeFiles/adapter_test.dir/build
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/laurence/src/kinectProject/src/bin/CMakeFiles  1
+	@echo "Built target adapter_test"
+.PHONY : CMakeFiles/adapter_test.dir/all
+
+# Include target in all.
+all: CMakeFiles/adapter_test.dir/all
+.PHONY : all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/adapter_test.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/laurence/src/kinectProject/src/bin/CMakeFiles 3
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/adapter_test.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/laurence/src/kinectProject/src/bin/CMakeFiles 0
+.PHONY : CMakeFiles/adapter_test.dir/rule
+
+# Convenience name for target.
+adapter_test: CMakeFiles/adapter_test.dir/rule
+.PHONY : adapter_test
+
+# clean rule for target.
+CMakeFiles/adapter_test.dir/clean:
+	$(MAKE) -f CMakeFiles/adapter_test.dir/build.make CMakeFiles/adapter_test.dir/clean
+.PHONY : CMakeFiles/adapter_test.dir/clean
+
+# clean rule for target.
+clean: CMakeFiles/adapter_test.dir/clean
+.PHONY : clean
+
+#=============================================================================
 # Target rules for target CMakeFiles/camera.dir
 
 # All Build rule for target.
 CMakeFiles/camera.dir/all:
 	$(MAKE) -f CMakeFiles/camera.dir/build.make CMakeFiles/camera.dir/depend
 	$(MAKE) -f CMakeFiles/camera.dir/build.make CMakeFiles/camera.dir/build
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/laurence/src/kinectProject/src/bin/CMakeFiles  1
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/laurence/src/kinectProject/src/bin/CMakeFiles  2
 	@echo "Built target camera"
 .PHONY : CMakeFiles/camera.dir/all
 
@@ -91,7 +127,7 @@ clean: CMakeFiles/camera.dir/clean
 CMakeFiles/util.dir/all:
 	$(MAKE) -f CMakeFiles/util.dir/build.make CMakeFiles/util.dir/depend
 	$(MAKE) -f CMakeFiles/util.dir/build.make CMakeFiles/util.dir/build
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/laurence/src/kinectProject/src/bin/CMakeFiles  2
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/laurence/src/kinectProject/src/bin/CMakeFiles  3
 	@echo "Built target util"
 .PHONY : CMakeFiles/util.dir/all
 

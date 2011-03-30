@@ -4,28 +4,18 @@
 
 using namespace cv;
 
-class KinectAdapter : public AbstractRGBDepthCamera, public Freenect::FreenectDevice {
+namespace camera {
+
+class KinectAdapter : public AbstractRGBDepthCamera {
 public:
-  KinectAdapter(freenect_context *ctx, int index);
+  KinectAdapter(int index = 0);
+  ~KinectAdapter();
 
   bool getRGBDepthFrame(RGBDepthFrame &frame);
 
 private:
-  void videoCallback(void *rgb, uint32_t timestamp);
-  void depthCallback(void *depth, uint32_t timestamp);
-
-  Mat depth_mat;
-  Mat rgb_mat;
-  Mat own_mat;
-
-  Mutex rgb_mutex;
-  Mutex depth_mutex;
-
-  bool new_depth_frame;
-  bool new_rgb_frame;
-
-  std::vector<uint8_t> buffer_depth;
-  std::vector<uint8_t> buffer_rgb;
-  std::vector<uint16_t> gamma;
-
+  Freenect::Freenect context;
+  Freenect::FreenectDevice *device;
 };
+
+}

@@ -154,6 +154,12 @@ LIBFREENECT_INCLUDE_DIR:PATH=/home/laurence/src/libfreenect/include
 //Path to a library.
 LIBFREENECT_LIBRARY:FILEPATH=/home/laurence/src/libfreenect/build/lib/libfreenect.a
 
+//Path to a file.
+LIBUSB_1_INCLUDE_DIR:PATH=/usr/include
+
+//Path to a library.
+LIBUSB_1_LIBRARY:FILEPATH=/usr/lib/libusb-1.0.so
+
 //The directory containing a CMake configuration file for OpenCV.
 OpenCV_DIR:PATH=/usr/local/share/opencv
 

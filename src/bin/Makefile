@@ -96,6 +96,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named adapter_test
+
+# Build rule for target.
+adapter_test: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 adapter_test
+.PHONY : adapter_test
+
+# fast build rule for target.
+adapter_test/fast:
+	$(MAKE) -f CMakeFiles/adapter_test.dir/build.make CMakeFiles/adapter_test.dir/build
+.PHONY : adapter_test/fast
+
+#=============================================================================
 # Target rules for targets named camera
 
 # Build rule for target.
@@ -145,6 +158,30 @@ camera/KinectAdapter.cpp.s:
 	$(MAKE) -f CMakeFiles/camera.dir/build.make CMakeFiles/camera.dir/camera/KinectAdapter.cpp.s
 .PHONY : camera/KinectAdapter.cpp.s
 
+test/KinectAdapterCmd.o: test/KinectAdapterCmd.cpp.o
+.PHONY : test/KinectAdapterCmd.o
+
+# target to build an object file
+test/KinectAdapterCmd.cpp.o:
+	$(MAKE) -f CMakeFiles/adapter_test.dir/build.make CMakeFiles/adapter_test.dir/test/KinectAdapterCmd.cpp.o
+.PHONY : test/KinectAdapterCmd.cpp.o
+
+test/KinectAdapterCmd.i: test/KinectAdapterCmd.cpp.i
+.PHONY : test/KinectAdapterCmd.i
+
+# target to preprocess a source file
+test/KinectAdapterCmd.cpp.i:
+	$(MAKE) -f CMakeFiles/adapter_test.dir/build.make CMakeFiles/adapter_test.dir/test/KinectAdapterCmd.cpp.i
+.PHONY : test/KinectAdapterCmd.cpp.i
+
+test/KinectAdapterCmd.s: test/KinectAdapterCmd.cpp.s
+.PHONY : test/KinectAdapterCmd.s
+
+# target to generate assembly for a file
+test/KinectAdapterCmd.cpp.s:
+	$(MAKE) -f CMakeFiles/adapter_test.dir/build.make CMakeFiles/adapter_test.dir/test/KinectAdapterCmd.cpp.s
+.PHONY : test/KinectAdapterCmd.cpp.s
+
 util/Mutex.o: util/Mutex.cpp.o
 .PHONY : util/Mutex.o
 
@@ -175,6 +212,7 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
+	@echo "... adapter_test"
 	@echo "... camera"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
@@ -182,6 +220,9 @@ help:
 	@echo "... camera/KinectAdapter.o"
 	@echo "... camera/KinectAdapter.i"
 	@echo "... camera/KinectAdapter.s"
+	@echo "... test/KinectAdapterCmd.o"
+	@echo "... test/KinectAdapterCmd.i"
+	@echo "... test/KinectAdapterCmd.s"
 	@echo "... util/Mutex.o"
 	@echo "... util/Mutex.i"
 	@echo "... util/Mutex.s"

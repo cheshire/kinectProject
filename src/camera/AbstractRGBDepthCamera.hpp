@@ -7,5 +7,5 @@ public:
   //
   // Returns true if a new frame is available and has been copied;
   // otherwise returns false if a new frame was not generated.
-  virtual bool getRGBDepthFrame(RGBDepthFrame &frame);
+  virtual bool getRGBDepthFrame(RGBDepthFrame &frame) = 0;
 };
