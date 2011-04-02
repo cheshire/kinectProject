@@ -2,7 +2,6 @@ find_path(LIBFREENECT_INCLUDE_DIR
   NAMES
     libfreenect.h
   PATHS
-    /home/laurence/src/libfreenect/include
     /usr/include
     /usr/local/include
 )
