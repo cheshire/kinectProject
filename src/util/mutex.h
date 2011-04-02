@@ -1,3 +1,6 @@
+#ifndef MUTEX_H_
+#define MUTEX_H_
+
 #include <pthread.h>
 
 class Mutex {
@@ -8,3 +11,5 @@ public:
 private:
   pthread_mutex_t m_mutex;
 };
+
+#endif
