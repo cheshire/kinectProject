@@ -2,3 +2,6 @@
 
 # ignore the binary file directories (contributor specific)
 bin/
+
+# ignore code::blocks project files.
+*.cbp
