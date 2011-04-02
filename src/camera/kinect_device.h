@@ -9,7 +9,7 @@
 namespace camera {
 
 class KinectDevice : public Freenect::FreenectDevice,
-    public AbstractRGBDepthCamera {
+    public AbstractRgbDepthCamera {
   public:
     KinectDevice(freenect_context *ctx, int index);
     ~KinectDevice();
@@ -22,7 +22,6 @@ class KinectDevice : public Freenect::FreenectDevice,
     bool get_rgb_depth_frame(RgbDepthFrame *frame);
 
   protected:
-    void convert_depth_matrix_to_meters(Mat *mat);
     void VideoCallback(void *_rgb, uint32_t timestamp);
     void DepthCallback(void *_depth, uint32_t timestamp);
 

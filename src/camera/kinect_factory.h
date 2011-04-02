@@ -3,6 +3,7 @@
 
 #include <libfreenect.hpp>
 
+#include "camera/fake_kinect.h"
 #include "camera/kinect_device.h"
 
 namespace camera {
@@ -14,6 +15,8 @@ class KinectFactory
     ~KinectFactory();
 
     KinectDevice *create_kinect(int index = 0);
+    FakeKinect  *create_kinect(const string &rgb_filename,
+      const string &depth_filename);
   protected:
     Freenect::Freenect context;
   private:

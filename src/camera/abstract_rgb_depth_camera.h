@@ -3,7 +3,7 @@
 
 #include "rgb_depth_frame.h"
 
-class AbstractRGBDepthCamera {
+class AbstractRgbDepthCamera {
 public:
   // Generates an RgbDepthFrame if a new frame is available and copies
   // it to &frame; otherwise leaves &frame as is.

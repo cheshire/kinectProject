@@ -33,7 +33,6 @@ bool KinectDevice::get_rgb_depth_frame(RgbDepthFrame *frame) {
   if (new_rgb_frame && new_depth_frame) {
     cv::cvtColor(rgb_mat, frame->rgb_image, CV_RGB2BGR);
     depth_mat.copyTo(frame->depth_image);
-    convert_depth_matrix_to_meters(&frame->depth_image);
     frame->timestamp = time(NULL);
     new_depth_frame = new_rgb_frame = false;
     success = true;
@@ -43,13 +42,6 @@ bool KinectDevice::get_rgb_depth_frame(RgbDepthFrame *frame) {
   depth_mutex.unlock();
 
   return success;
-}
-
-// From nicolas.burrus.name/index.php/Research/KinectCalibration
-void KinectDevice::convert_depth_matrix_to_meters(Mat *mat) {
-  Mat temp(Size(640, 480), CV_32FC1, Scalar(1));
-  mat->convertTo(temp, CV_32FC1, -0.0030711016, 3.3309495161);
-  cv::pow(temp, -1.0, *mat);
 }
 
 void KinectDevice::VideoCallback(void *_rgb, uint32_t timestamp) {
