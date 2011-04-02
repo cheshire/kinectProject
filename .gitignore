@@ -1,1 +1,4 @@
 *.out
+
+# ignore the binary file directories (contributor specific)
+bin/
