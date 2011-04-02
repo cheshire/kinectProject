@@ -1,7 +1,11 @@
+#include <cmath>
 #include <cv.hpp>
+#include <cxcore.h>
+#include <highgui.h>
 #include <libfreenect.hpp>
 
 #include "camera/kinect_device.h"
+#include "camera/kinect_factory.h"
 #include "camera/rgb_depth_frame.h"
 
 using namespace cv;
@@ -23,7 +27,7 @@ int main() {
 
     char k = cvWaitKey(10);
     switch (k) {
-      case 'ESC':
+      case 27:
         delete device;
         cvDestroyWindow("rgb");
         cvDestroyWindow("depth");

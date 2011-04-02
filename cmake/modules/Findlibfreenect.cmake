@@ -1,10 +1,22 @@
-find_path(LIBFREENECT_INCLUDE_DIR
+find_path(LIBFREENECT_CPP_INCLUDE_DIR
   NAMES
-    libfreenect.h
+    libfreenect.hpp
   PATHS
     /usr/include
     /usr/local/include
 )
+
+find_path(LIBFREENECT_C_INCLUDE_DIR
+  NAMES
+    libfreenect.h
+  PATHS
+    /usr/include
+    /usr/include/libfreenect
+    /usr/local/include
+    /usr/local/include/libfreenect
+)
+
+set(LIBFREENECT_INCLUDE_DIR ${LIBFREENECT_CPP_INCLUDE_DIR} ${LIBFREENECT_C_INCLUDE_DIR})
 
 find_library(LIBFREENECT_LIBRARY
   NAMES

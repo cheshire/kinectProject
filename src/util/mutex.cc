@@ -1,4 +1,4 @@
-#include "Mutex.hpp"
+#include "mutex.h"
 
 Mutex::Mutex() {
   pthread_mutex_init(&m_mutex, NULL);

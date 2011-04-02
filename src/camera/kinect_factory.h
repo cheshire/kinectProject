@@ -3,7 +3,7 @@
 
 #include <libfreenect.hpp>
 
-using namespace freenect;
+#include "camera/kinect_device.h"
 
 namespace camera {
 
@@ -15,7 +15,7 @@ class KinectFactory
 
     KinectDevice *create_kinect(int index = 0);
   protected:
-    Freenect context;
+    Freenect::Freenect context;
   private:
 };
 }

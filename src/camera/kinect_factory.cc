@@ -1,4 +1,4 @@
-#include "KinectFactory.h"
+#include "kinect_factory.h"
 
 namespace camera {
 
@@ -6,8 +6,8 @@ KinectFactory::KinectFactory() {}
 
 KinectFactory::~KinectFactory() {}
 
-KinectFactory::create_kinect(int index) {
-  return new KinectDevice(context, index);
+KinectDevice *KinectFactory::create_kinect(int index) {
+  return &context.createDevice<KinectDevice>(index);
 }
 
 }

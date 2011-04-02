@@ -1,4 +1,4 @@
-#include "KinectDevice.h"
+#include "kinect_device.h"
 
 namespace camera {
 
@@ -33,8 +33,8 @@ bool KinectDevice::get_rgb_depth_frame(RgbDepthFrame *frame) {
   if (new_rgb_frame && new_depth_frame) {
     cv::cvtColor(rgb_mat, frame->rgb_image, CV_RGB2BGR);
     depth_mat.copyTo(frame->depth_image);
-    convert_depth_matrix_to_meters(frame->depth_image);
-    frame.timestamp = time(NULL);
+    convert_depth_matrix_to_meters(&frame->depth_image);
+    frame->timestamp = time(NULL);
     new_depth_frame = new_rgb_frame = false;
     success = true;
   }
