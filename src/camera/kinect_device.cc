@@ -24,7 +24,7 @@ KinectDevice::~KinectDevice() {
   this->stopDepth();
 }
 
-bool KinectDevice::get_rgb_depth_frame(RGBDepthFrame *frame) {
+bool KinectDevice::get_rgb_depth_frame(RgbDepthFrame *frame) {
   bool success = false;
 
   depth_mutex.lock();

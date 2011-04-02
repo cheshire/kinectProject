@@ -5,12 +5,12 @@
 
 class AbstractRGBDepthCamera {
 public:
-  // Generates an RGBDepthFrame if a new frame is available and copies
+  // Generates an RgbDepthFrame if a new frame is available and copies
   // it to &frame; otherwise leaves &frame as is.
   //
   // Returns true if a new frame is available and has been copied;
   // otherwise returns false if a new frame was not generated.
-  virtual bool get_rgb_depth_frame(RGBDepthFrame &frame) = 0;
+  virtual bool get_rgb_depth_frame(RgbDepthFrame &frame) = 0;
 };
 
 #endif

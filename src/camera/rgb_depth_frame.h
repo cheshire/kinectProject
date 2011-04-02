@@ -2,13 +2,12 @@
 #define RGB_DEPTH_FRAME_H_
 
 #include <ctime>
-
-#include "cv.h"
+#include <cv.h>
 
 using namespace cv;
 
-struct RGBDepthFrame {
-  RGBDepthFrame() :
+struct RgbDepthFrame {
+  RgbDepthFrame() :
     rgb_image(Size(640, 480), CV_8UC3),
     depth_image(Size(640, 480), CV_16UC1) {}
 

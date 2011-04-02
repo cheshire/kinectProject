@@ -1,8 +1,9 @@
 #ifndef KINECT_DEVICE_H_
 #define KINECT_DEVICE_H_
 
+#include <libfreenect.hpp>
+
 #include "abstract_rgb_depth_camera.h"
-#include "libfreenect.hpp"
 #include "util/mutex.h"
 
 namespace camera {
@@ -18,7 +19,7 @@ class KinectDevice : public Freenect::FreenectDevice,
     //
     // Copies the frame into &frame and returns true if a new frame is
     // available; otherwise returns false.
-    bool get_rgb_depth_frame(RGBDepthFrame *frame);
+    bool get_rgb_depth_frame(RgbDepthFrame *frame);
 
   protected:
     void convert_depth_matrix_to_meters(Mat *mat);
