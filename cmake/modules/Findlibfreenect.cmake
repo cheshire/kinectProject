@@ -10,7 +10,12 @@ find_library(LIBFREENECT_LIBRARY
   NAMES
     libfreenect.a
   PATHS
-    /home/laurence/src/libfreenect/build/lib
+    /usr/lib
+    /usr/lib32
+    /usr/lib64
+    /usr/local/lib
+    /usr/local/lib32
+    /usr/local/lib64
 )
 
 set(LIBFREENECT_INCLUDE_DIRS
