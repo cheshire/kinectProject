@@ -9,7 +9,7 @@ include_directories(${LIBFREENECT_INCLUDE_DIR})
 include_directories(${OpenCV_INCLUDE_DIR})
 
 set(third_party_include ${LIBFREENECT_INCLUDE_DIR} ${OpenCV_INCLUDE_DIR})
-set(third_party_lib ${LIBFREENECT_LIBRARY} ${OpenCV_LIBS})
+set(third_party_lib ${LIBFREENECT_LIBRARY} ${OpenCV_LIBS} ${GFlags_LIBS})
 
 # General compilation flags.
 
@@ -31,4 +31,4 @@ target_link_libraries(camera util ${THIRD_PARTY_LIB})
 
 add_executable(kinect_view examples/kinect_view.cc)
 target_link_libraries(kinect_view camera util)
-target_link_libraries(kinect_view ${LIBFREENECT_LIBRARY} ${LIBUSB_1_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(kinect_view ${LIBFREENECT_LIBRARY} ${LIBUSB_1_LIBRARIES} ${OpenCV_LIBS} ${GFlags_LIBS})

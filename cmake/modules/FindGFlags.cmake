@@ -31,8 +31,15 @@ IF(GFlags_LIBRARY_DIRS)
     )
     link_directories(${GFlags_LIBRARY_DIRS})
 
-    SET(GFlags_LIBS
-        ${GFlags_lib}
+    find_library(GFlags_LIBS
+      NAMES
+        gflags
+      PATHS
+        ${GFlags_LIBRARY_DIRS}
+        /usr/lib
+        /usr/local/lib
+        /opt/local/lib
+        /sw/lib
     )
 
     SET(GFlags_FOUND true)
