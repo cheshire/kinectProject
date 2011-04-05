@@ -3,6 +3,7 @@
 find_package(libfreenect REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(libusb-1.0 REQUIRED)
+find_package(GFlags REQUIRED)
 
 include_directories(${LIBFREENECT_INCLUDE_DIR})
 include_directories(${OpenCV_INCLUDE_DIR})
