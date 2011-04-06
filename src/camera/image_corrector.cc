@@ -10,10 +10,11 @@
  *      Author: Laurence Rouesnel
  */
 
-#include "image_corector.h"
+#include "image_corrector.h"
 
 #include <gflags/gflags.h>
-#include <cmath.h>
+#include <cmath>
+#include <cv.h>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
@@ -23,8 +24,29 @@ namespace camera {
 
 namespace {
 
+/* From https://github.com/nburrus/nestk/blob/master/ntk/geometry/pose_3d.cpp */
+cv::Vec3f unproject_from_image(int x, int y, double depth) {
+  Eigen::Vector4d ep (x, y, depth, 1);
+  Eigen::Vector4d r (ep(0) * ep(2), ep(1) * ep(2), ep(2), 1);
+  return cv::Vec3f(r(0), r(1), r(2));
+}
+
+/* From https://github.com/nburrus/nestk/blob/master/ntk/geometry/pose_3d.cpp */
+cv::Point3f project_to_image(const cv::Point3f& p, Eigen::Projective3d projective_transform) {
+  // Translate the cvPoint to an EigenVector.
+  Eigen::Vector4d ep(p.x, p.y, p.z, 1);
+
+  // Project transform will be set for the rgb camera.
+  ep = projective_transform * ep;
+
+  ep(0) /= ep(2);
+  ep(1) /= ep(2);
+
+  return cv::Point3f(ep(0), ep(1), ep(2));
+}
+
 // From https://github.com/nburrus/nestk/blob/master/ntk/geometry/pose_3d.cpp
-Eigen::Isometry3d intrinsics_transform(CameraCalibrationData& data) const {
+Eigen::Isometry3d intrinsics_transform(CameraCalibrationData& data) {
 	Eigen::Isometry3d m;
 	m.setIdentity();
 	m(0,0) = data.focal_x;
@@ -57,7 +79,7 @@ ImageCorrector::ImageCorrector() {
 }
 
 // https://github.com/nburrus/nestk/blob/master/ntk/camera/calibration.cpp
-ImageCorrector::load_calibration_data() {
+void ImageCorrector::load_calibration_data() {
 	FileStorage fs(FLAGS_distortion_data, FileStorage::READ);
 
 	// Load the matricies from the calibration file.
@@ -73,7 +95,7 @@ ImageCorrector::load_calibration_data() {
 			cv::Mat(),
 			calibration_data.rgb_intrinsics,
 			cv::Size(640, 480),
-			cv::CV_16SC2,
+			CV_16SC2,
 			rgb_undistort_map_1,
 			rgb_undistort_map_2
 			);
@@ -84,7 +106,7 @@ ImageCorrector::load_calibration_data() {
 			cv::Mat(),
 			calibration_data.depth_intrinsics,
 			cv::Size(640, 480),
-			cv::CV_16SC2,
+			CV_16SC2,
 			depth_undistort_map_1,
 			depth_undistort_map_2
 			);
@@ -95,7 +117,7 @@ ImageCorrector::load_calibration_data() {
 	fs["R"] >> r;
 	fs["T"] >> t;
 
-	cv::Mat to_gl_base(3,3);
+	cv::Mat1d to_gl_base(3,3);
 	cv::setIdentity(to_gl_base);
 
 	to_gl_base(1, 1) = -1;
@@ -111,7 +133,7 @@ ImageCorrector::load_calibration_data() {
 	Eigen::Matrix3d rotation_matrix;
 	for (int r = 0; r < 3; ++r) {
 		for (int c = 0; c < 3; ++c) {
-			rotation_matrix(r, c) = rgb_camera.r(r, c);
+			rotation_matrix(r, c) = rgb_camera.r.at<double>(r, c);
 		}
 	}
 
@@ -119,9 +141,9 @@ ImageCorrector::load_calibration_data() {
 	// camera transform matrix.
 	camera_transform.prerotate(rotation_matrix);
 	camera_transform.pretranslate(Eigen::Vector3d(
-			rgb_camera.t[0],
-			rgb_camera.t[1],
-			rgb_camera.t[2]));
+			rgb_camera.t.at<double>(0),
+			rgb_camera.t.at<double>(1),
+			rgb_camera.t.at<double>(2)));
 
 
 	// Compute the 'projective transform'
@@ -156,9 +178,9 @@ void ImageCorrector::align(RgbDepthFrame *frame) {
 			int x = floor(prgb.x + 0.5);
 			int y = floor(prgb.y + 0.5);
 			if (is_yx_in_range(rgb_image, x, y)) {
-				cv::Vec bgr = rgb_image(y, x);
-				mapped_colour(i, j) = bgr;
-				mapped_depth(y, x) = prgb.z;
+				cv::Vec3i bgr = rgb_image.at<cv::Vec3i>(y, x);
+				mapped_colour.at<cv::Vec<int,3> >(i, j) = bgr;
+				mapped_depth.at<double>(y, x) = prgb.z;
 			}
 
 		}
@@ -169,26 +191,7 @@ void ImageCorrector::align(RgbDepthFrame *frame) {
 
 }
 
-/* From https://github.com/nburrus/nestk/blob/master/ntk/geometry/pose_3d.cpp */
-cv::Vec3f unproject_from_image(int x, int y, double depth) {
-	Eigen::Vector4d ep (x, y, depth, 1);
-	Eigen::Vector4d r (ep(0) * ep(2), ep(1) * ep(2), ep(2), 1);
-	return cv::Vec3f(r(0), r(1), r(2));
-}
 
-/* From https://github.com/nburrus/nestk/blob/master/ntk/geometry/pose_3d.cpp */
-cv::Point3f project_to_image(const cv::Point3f& p, Eigen::Projective3d projective_transform) {
-	// Translate the cvPoint to an EigenVector.
-	Eigen::Vector4d ep(p.x, p.y, p.z, 1);
-
-	// Project transform will be set for the rgb camera.
-	p = projective_transform * p;
-
-	p(0) /= p(2);
-	p(1) /= p(2);
-
-	return cv::Point3f(p(0), p(1), p(2));
-}
 
 /* Undistorts the image in place (this affects the field of view).
  *
@@ -199,17 +202,17 @@ void ImageCorrector::undistort(RgbDepthFrame *frame) {
 
 	// 1. Convert depth matrix to meters.
 	// This does an in-place conversion.
-	convert_depth_matrix_to_meters(&(frame.depth_image));
+	convert_depth_matrix_to_meters(&(frame->depth_image));
 
 	// 2. Undistort the images using the calibration data.
-	cv::remap(frame.rgb_image,
+	cv::remap(frame->rgb_image,
 			rgb,
 			rgb_undistort_map_1,
 			rgb_undistort_map_2,
 			CV_INTER_LINEAR);
 
-	cv::remap(frame.depth_image,
-				depth,
+	cv::remap(frame->depth_image,
+				depth_m,
 				depth_undistort_map_1,
 				depth_undistort_map_2,
 				CV_INTER_LINEAR);

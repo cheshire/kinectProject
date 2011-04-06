@@ -12,6 +12,8 @@
 #define IMAGE_ALIGNER_H_
 
 #include <cv.h>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 
 #include "camera/rgb_depth_frame.h"
 
@@ -35,6 +37,7 @@ public:
 	ImageCorrector();
 
 	void undistort(RgbDepthFrame *frame);
+	void align(RgbDepthFrame *frame);
 private:
 	void load_calibration_data();
 
