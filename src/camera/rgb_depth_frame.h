@@ -11,6 +11,10 @@ struct RgbDepthFrame {
     rgb_image(Size(640, 480), CV_8UC3),
     depth_image(Size(640, 480), CV_16UC1) {}
 
+  Size size() {
+	  return rgb_image.size();
+  }
+
   Mat rgb_image;
   Mat depth_image;
   time_t timestamp;
