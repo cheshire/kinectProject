@@ -4,24 +4,34 @@
 #include <cv.h>
 #include <highgui.h>
 #include <string>
+#include <time.h>
+#include <vector>
 
 #include "camera/abstract_rgb_depth_camera.h"
 
+using namespace std;
 using namespace cv;
 
 namespace camera {
 
-class FakeKinect : AbstractRgbDepthCamera {
+class FakeKinect : public AbstractRgbDepthCamera {
 public:
-  FakeKinect(const string &rgb_filename, const string &depth_filename);
+  FakeKinect(const string &directory);
 
   bool get_rgb_depth_frame(RgbDepthFrame *frame);
 
 private:
-  int frame_count;
+  void initialize();
 
-  string rgb_filename_base;
-  string depth_filename_base;
+  bool initialized;
+  int frame_count;
+  int total_frame_count;
+  time_t last_time;
+
+  string directory;
+
+  vector<Mat> rgb_frames;
+  vector<Mat> depth_frames;
 };
 }
 

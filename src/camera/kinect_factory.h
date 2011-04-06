@@ -11,12 +11,8 @@ namespace camera {
 class KinectFactory
 {
   public:
-    KinectFactory();
-    ~KinectFactory();
-
     KinectDevice *create_kinect(int index = 0);
-    FakeKinect  *create_kinect(const string &rgb_filename,
-      const string &depth_filename);
+    FakeKinect  *create_kinect(const string &directory);
   protected:
     Freenect::Freenect context;
   private:
