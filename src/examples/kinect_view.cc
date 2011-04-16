@@ -6,50 +6,68 @@
 #include <libfreenect.hpp>
 #include <string>
 #include <vector>
-#include <gflags/gflags.h>
 #include <time.h>
+#include <gflags/gflags.h>
+#include <glog/logging.h>
 
 #include "camera/abstract_rgb_depth_camera.h"
 #include "camera/fake_kinect.h"
 #include "camera/kinect_factory.h"
 #include "camera/kinect_recorder.h"
 #include "camera/rgb_depth_frame.h"
+#include "camera/image_corrector.h"
 
 DEFINE_string(fake_kinect_data, "", "directory containing files for FakeKinect");
 
 using namespace camera;
-using namespace cv;
 using namespace std;
 
 int main(int argc, char* argv[]) {
   google::ParseCommandLineFlags(&argc, &argv, true);
+  google::InitGoogleLogging(argv[0]);
+  google::InstallFailureSignalHandler();
   bool running(true);
   RgbDepthFrame frame;
   Mat temp_depth;
   KinectFactory factory;
+  ImageCorrector image_corrector;
   KinectRecorder *recorder = NULL;
-  vector<RgbDepthFrame*> *frames;
+  vector<RgbDepthFrame*> *frames = new vector<RgbDepthFrame*>;
   AbstractRgbDepthCamera *device;
 
-  cout << "Creating KinectDevice" << endl;
+  LOG(INFO) << "Creating KinectDevice";
   if (FLAGS_fake_kinect_data.empty()) {
     device = factory.create_kinect();
   } else {
     device = factory.create_kinect(FLAGS_fake_kinect_data);
   }
-  cout << "Successfully created KinectDevice" << endl;
+  LOG(INFO) << "Successfully created KinectDevice";
 
-  cout << "Creating Windows" << endl;
+  LOG(INFO) << "Creating Windows";
   namedWindow("rgb", CV_WINDOW_AUTOSIZE);
   namedWindow("depth", CV_WINDOW_AUTOSIZE);
-  cout << "Created Windows" << endl;
 
   while(running) {
-    while (!device->get_rgb_depth_frame(&frame))
-    {}
+    while (true){
+      CameraResponse r = device->get_rgb_depth_frame(&frame);
+      if (r == WAIT){
+        continue;
+      } else if (r == NO_FRAMES){
+        LOG(ERROR) << "No files found in the given directory, aborting";
+        exit(0);
+      } else if (r == OK){
+        break;
+      }
+    }
+        
+    LOG(INFO) << "undistoring";
+    image_corrector.undistort(frame);
+    LOG(INFO) << "aligning";
+    image_corrector.align(frame);
+    
     cv::imshow("rgb", frame.rgb_image);
 
-    frame.depth_image.convertTo(temp_depth, CV_8UC1, 255.0/2048.0);
+    frame.depth_image.convertTo(temp_depth, CV_8UC1, 150);//255.0/2048.0);
 
     cv::imshow("depth", temp_depth);
 

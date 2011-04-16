@@ -12,6 +12,7 @@
 #define IMAGE_ALIGNER_H_
 
 #include <cv.h>
+#include <gflags/gflags.h>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
@@ -34,27 +35,28 @@ struct CameraCalibrationData {
 
 class ImageCorrector {
 public:
-	ImageCorrector();
+  ImageCorrector();
 
-	void undistort(RgbDepthFrame *frame);
-	void align(RgbDepthFrame *frame);
+  void undistort(RgbDepthFrame& frame);
+  
+  void align(RgbDepthFrame& frame);
 private:
-	void load_calibration_data();
+  void load_calibration_data();
 
-	CameraCalibrationData rgb_camera, depth_camera;
+  CameraCalibrationData rgb_camera, depth_camera;
 
-	struct {
-		cv::Mat rgb_intrinsics;
-		cv::Mat rgb_distortion;
-		cv::Mat depth_intrinsics;
-		cv::Mat depth_distortion;
-	} calibration_data;
+  struct {
+    cv::Mat rgb_intrinsics;
+    cv::Mat rgb_distortion;
+    cv::Mat depth_intrinsics;
+    cv::Mat depth_distortion;
+  } calibration_data;
 
-	cv::Mat rgb_undistort_map_1;
-	cv::Mat rgb_undistort_map_2;
+  cv::Mat rgb_undistort_map_1;
+  cv::Mat rgb_undistort_map_2;
 
-	cv::Mat depth_undistort_map_1;
-	cv::Mat depth_undistort_map_2;
+  cv::Mat depth_undistort_map_1;
+  cv::Mat depth_undistort_map_2;
 };
 
 }
