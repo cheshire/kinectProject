@@ -14,12 +14,13 @@ class KinectDevice : public Freenect::FreenectDevice,
     KinectDevice(freenect_context *ctx, int index);
     ~KinectDevice();
 
-    // Gets the latest rgb/depth frame from the kinect device, if one
-    // exists.
-    //
-    // Copies the frame into &frame and returns true if a new frame is
-    // available; otherwise returns false.
-    bool get_rgb_depth_frame(RgbDepthFrame *frame);
+    /** Gets the latest rgb/depth frame from the kinect device, if one
+     * exists.
+     * 
+     * Copies the frame into &frame and returns CameraResponse.OK
+     * if one is available and CameraResponse.WAIT otherwise.
+     */
+    CameraResponse get_rgb_depth_frame(RgbDepthFrame *frame);
 
   protected:
     void VideoCallback(void *_rgb, uint32_t timestamp);

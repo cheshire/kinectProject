@@ -24,7 +24,7 @@ KinectDevice::~KinectDevice() {
   this->stopDepth();
 }
 
-bool KinectDevice::get_rgb_depth_frame(RgbDepthFrame *frame) {
+CameraResponse KinectDevice::get_rgb_depth_frame(RgbDepthFrame *frame) {
   bool success = false;
 
   depth_mutex.lock();
@@ -41,7 +41,11 @@ bool KinectDevice::get_rgb_depth_frame(RgbDepthFrame *frame) {
   rgb_mutex.unlock();
   depth_mutex.unlock();
 
-  return success;
+  if (success){
+    return OK;
+  } else {
+    return WAIT;
+  }
 }
 
 void KinectDevice::VideoCallback(void *_rgb, uint32_t timestamp) {

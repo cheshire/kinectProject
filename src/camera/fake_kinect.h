@@ -18,7 +18,7 @@ class FakeKinect : public AbstractRgbDepthCamera {
 public:
   FakeKinect(const string &directory);
 
-  bool get_rgb_depth_frame(RgbDepthFrame *frame);
+  CameraResponse get_rgb_depth_frame( RgbDepthFrame* frame);
 
 private:
   void initialize();

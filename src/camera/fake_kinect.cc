@@ -1,20 +1,28 @@
 #include "fake_kinect.h"
 
 #include <iostream>
+#include <unistd.h>
 
 #include "camera/constants.h"
+#include "camera/abstract_rgb_depth_camera.h"
 
-#define KINECT_FRAME_LATENCY 0.009
+using namespace std;
+
+namespace {
+  
+  // Delay between the frames in milliseconds
+  const double KINECT_FRAME_LATENCY = 100;
+}
 
 namespace camera {
 
 FakeKinect::FakeKinect(const string &directory)
     : initialized(false), frame_count(0), last_time(time(NULL)), directory(directory) {
-  std::cout << "Creating fake kinect." << std::endl;
+  cout << "Creating fake kinect." << endl;
 }
 
 void FakeKinect::initialize() {
-  std::cout << "FakeKinect: Initializing" << std::endl;
+  cout << "FakeKinect: Initializing" << endl;
   int count = 0;
   while(1) {
     string rgb_filename = cv::format(PATH_FORMAT, directory.c_str(),
@@ -23,16 +31,15 @@ void FakeKinect::initialize() {
     string depth_filename = cv::format(PATH_FORMAT, directory.c_str(),
           DEPTH_FILENAME_BASE, count, DEPTH_FILENAME_EXTENSION);
 
-    std::cout << "Attempting to read RGB from " << rgb_filename << std::endl;
+    cout << "Attempting to read RGB from " << rgb_filename << endl;
     Mat rgb = imread(rgb_filename.c_str());
-
     if (rgb.data == NULL) {
       break;
     }
 
     rgb_frames.push_back(rgb);
 
-    std::cout << "Attempting to read Depth from " << depth_filename << std::endl;
+    cout << "Attempting to read Depth from " << depth_filename << endl;
 
     FileStorage fs(depth_filename.c_str(), FileStorage::READ);
     Mat depth = Mat();
@@ -41,30 +48,34 @@ void FakeKinect::initialize() {
     depth_frames.push_back(depth);
     count++;
   }
-
+  
   total_frame_count = count;
+  
   initialized = true;
 }
 
-bool FakeKinect::get_rgb_depth_frame(RgbDepthFrame *frame) {
+CameraResponse FakeKinect::get_rgb_depth_frame(RgbDepthFrame *frame) {
   if (!initialized) {
     initialize();
   }
-
-  if (difftime(time(NULL), last_time) < KINECT_FRAME_LATENCY) {
-    // Add an artifical delay that matches the kinect (from experimental
-    // evidence).
-    return false;
+  
+  if (total_frame_count == 0){
+    
+    // No frames were recorded, abort.
+    return NO_FRAMES;
   }
+
+  usleep(KINECT_FRAME_LATENCY * 1000);
+  
   last_time = time(NULL);
 
-  std::cout << "FakeKinect: Getting Frame" << std::endl;
+  cout << "FakeKinect: Getting Frame" << endl;
 
   rgb_frames[frame_count].copyTo(frame->rgb_image);
   depth_frames[frame_count].copyTo(frame->depth_image);
 
   frame_count = (frame_count + 1) % total_frame_count;
-  return true;
+  return OK;
 }
 
 }
