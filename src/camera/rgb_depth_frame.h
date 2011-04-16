@@ -12,7 +12,7 @@ struct RgbDepthFrame {
     depth_image(Size(640, 480), CV_16UC1) {}
 
   Size size() {
-	  return rgb_image.size();
+    return rgb_image.size();
   }
 
   Mat rgb_image;
