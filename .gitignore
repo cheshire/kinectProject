@@ -5,3 +5,4 @@ bin/
 
 # ignore code::blocks project files.
 *.cbp
+*~
