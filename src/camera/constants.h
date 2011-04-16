@@ -2,8 +2,8 @@
 #define CONSTANTS_H
 
 // KinectRecorder and FakeKinect Constants
-#define FILENAME_FORMAT "%s.%i.%s"
-#define PATH_FORMAT "%s/%s.%i.%s"
+#define FILENAME_FORMAT "%s-%i.%s"
+#define PATH_FORMAT "%s/%s-%i.%s"
 
 #define RGB_FILENAME_BASE "rgb"
 #define DEPTH_FILENAME_BASE "depth"
