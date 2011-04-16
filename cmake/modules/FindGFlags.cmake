@@ -14,14 +14,14 @@ cmake_policy(SET CMP0011 OLD)
 FIND_PATH(GFlags_LIBRARY_DIRS
         libgflags.a
         HINTS
-        /usr/local/lib
+        /usr/lib
 )
 
 IF(GFlags_LIBRARY_DIRS)
   FIND_PATH(GFlags_INCLUDE_DIRS
           gflags/gflags.h
           HINTS
-          /usr/local/include
+          /usr/include
           ${GFlags_ROOT_DIR}/src
   )
 

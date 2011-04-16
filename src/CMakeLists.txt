@@ -5,13 +5,15 @@ find_package(OpenCV REQUIRED)
 find_package(libusb-1.0 REQUIRED)
 find_package(GFlags REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(Glog REQUIRED)
 
 include_directories(${LIBFREENECT_INCLUDE_DIR})
+include_directories(${GLOG_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIR})
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-set(third_party_include ${LIBFREENECT_INCLUDE_DIR} ${OpenCV_INCLUDE_DIR})
-set(third_party_lib ${LIBFREENECT_LIBRARY} ${OpenCV_LIBS} ${GFlags_LIBS})
+set(third_party_include ${LIBFREENECT_INCLUDE_DIR} ${OpenCV_INCLUDE_DIR} ${GLOG_INCLUDE_DIRS})
+set(third_party_lib ${LIBFREENECT_LIBRARY} ${OpenCV_LIBS} ${GFlags_LIBS} ${GLOG_LIBRARIES})
 
 # General compilation flags.
 
@@ -33,4 +35,4 @@ target_link_libraries(camera util ${THIRD_PARTY_LIB})
 
 add_executable(kinect_view examples/kinect_view.cc)
 target_link_libraries(kinect_view camera util)
-target_link_libraries(kinect_view ${LIBFREENECT_LIBRARY} ${LIBUSB_1_LIBRARIES} ${OpenCV_LIBS} ${GFlags_LIBS})
+target_link_libraries(kinect_view ${LIBFREENECT_LIBRARY} ${LIBUSB_1_LIBRARIES} ${OpenCV_LIBS} ${GFlags_LIBS} ${GLOG_LIBRARIES})
