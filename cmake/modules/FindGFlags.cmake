@@ -15,6 +15,7 @@ FIND_PATH(GFlags_LIBRARY_DIRS
         libgflags.a
         HINTS
         /usr/lib
+        /usr/local/lib
 )
 
 IF(GFlags_LIBRARY_DIRS)
@@ -22,6 +23,7 @@ IF(GFlags_LIBRARY_DIRS)
           gflags/gflags.h
           HINTS
           /usr/include
+          /usr/local/include
           ${GFlags_ROOT_DIR}/src
   )
 

@@ -1,5 +1,56 @@
-1) installing openCV on Ubuntu. Wow, this was fun:
+# Installation Guide
+This was based on an install on a fresh Ubuntu 10.04 system (with build-essentials installed).
 
-this guide is pretty comprehensive, replace 2.1 by 2.2 where applicable: http://tutorial.downloadatoz.com/how-to-install-opencv-2-1-on-ubuntu-10-04.html
+1) install prerequisites
+sudo apt-get install git-core cmake libglut3-dev pkg-config build-essential libxmu-dev libxi-dev libusb-1.0-0-dev
 
-2) installing openKinect
+2) install opencv
+* download the latest version from http://opencv.willowgarage.com/wiki/ (it should be version 2.2 located http://sourceforge.net/projects/opencvlibrary/files/opencv-unix/2.2/OpenCV-2.2.0.tar.bz2/download)
+* tar xvf OpenCV-2.2.0.tar.bz2
+* cd OpenCV-2.2.0.tar.bz2
+* mkdir build
+* cd build
+* cmake ..
+* make -j 4
+* sudo make install
+
+3) install libfreenect
+* git clone git://github.com/OpenKinect/libfreenect.git
+* cd libfreenect
+* mkdir build
+* cd build
+* cmake ..
+* make -j 4
+* sudo make install
+
+4) install gflags
+* download google-gflags from http://code.google.com/p/google-gflags
+* tar xvf gflags-1.5.tar.gz
+* cd gflags-1.5
+* ./configure
+* make -j 4
+* sudo make install
+
+5) install eigen3
+* hg clone https://bitbucket.org/eigen/eigen/
+* cd eigen
+* mkdir build
+* cd build
+* cmake ..
+* make -j 4
+* sudo make install
+
+6) install google log
+* download google-log from http://code.google.com/p/google-glog/
+* tar xvf glog-0.3.1-1.tar.gz
+* cd glog-0.3.1
+* ./configure
+* make -j 4
+* sudo make install
+
+7) build kinectProject!
+* cd kinectProject
+* mkdir bin
+* cd bin
+* cmake ..
+* make -j 4
