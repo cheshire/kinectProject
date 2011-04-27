@@ -3,16 +3,18 @@
 
 #include <libfreenect.hpp>
 
-#include "abstract_rgb_depth_camera.h"
+#include "camera/image.h"
+#include "camera/image_source.h"
+#include "camera/camera_perspective.h"
 #include "util/mutex.h"
 
 namespace camera {
 
-class KinectDevice : public Freenect::FreenectDevice,
-    public AbstractRgbDepthCamera {
+class KinectSource : public Freenect::FreenectDevice,
+    public ImageSource {
   public:
-    KinectDevice(freenect_context *ctx, int index);
-    ~KinectDevice();
+    KinectSource(freenect_context *ctx, int index);
+    ~KinectSource();
 
     /** Gets the latest rgb/depth frame from the kinect device, if one
      * exists.
@@ -20,15 +22,18 @@ class KinectDevice : public Freenect::FreenectDevice,
      * Copies the frame into &frame and returns CameraResponse.OK
      * if one is available and CameraResponse.WAIT otherwise.
      */
-    CameraResponse get_rgb_depth_frame(RgbDepthFrame *frame);
+    CameraResponse get_image(Image *frame);
 
   protected:
     void VideoCallback(void *_rgb, uint32_t timestamp);
     void DepthCallback(void *_depth, uint32_t timestamp);
 
   private:
-    Mat depth_mat;
-    Mat rgb_mat;
+    cv::Mat depth_mat;
+    cv::Mat rgb_mat;
+
+    CameraPerspective *rgb_perspective;
+    CameraPerspective *depth_perspective;
 
     Mutex rgb_mutex;
     Mutex depth_mutex;

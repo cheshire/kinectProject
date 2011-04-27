@@ -3,16 +3,16 @@
 
 #include <libfreenect.hpp>
 
-#include "camera/fake_kinect.h"
-#include "camera/kinect_device.h"
+#include "camera/file_source.h"
+#include "camera/kinect_source.h"
 
 namespace camera {
 
 class KinectFactory
 {
   public:
-    KinectDevice *create_kinect(int index = 0);
-    FakeKinect  *create_kinect(const string &directory);
+    KinectSource *create_kinect(int index = 0);
+    FileSource  *create_kinect(const string &directory);
   protected:
     Freenect::Freenect context;
   private:

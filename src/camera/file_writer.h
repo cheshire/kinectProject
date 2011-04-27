@@ -5,16 +5,16 @@
 #include <highgui.h>
 #include <string>
 
-#include "camera/kinect_device.h"
+#include "camera/kinect_source.h"
 
 using namespace cv;
 namespace camera {
 
-class KinectRecorder {
+class FileWriter {
 public:
-  KinectRecorder();
+  FileWriter();
 
-  void record(const RgbDepthFrame &frame);
+  void record(const Image &frame);
 private:
   int frame_count;
 };

@@ -2,12 +2,12 @@
 
 namespace camera {
 
-KinectDevice *KinectFactory::create_kinect(int index) {
-  return &context.createDevice<KinectDevice>(index);
+KinectSource *KinectFactory::create_kinect(int index) {
+  return &context.createDevice<KinectSource>(index);
 }
 
-FakeKinect *KinectFactory::create_kinect(const string &directory) {
-  return new FakeKinect(directory);
+FileSource *KinectFactory::create_kinect(const string &directory) {
+  return new FileSource(directory);
 }
 
 }

@@ -7,18 +7,18 @@
 #include <time.h>
 #include <vector>
 
-#include "camera/abstract_rgb_depth_camera.h"
+#include "camera/image_source.h"
 
 using namespace std;
 using namespace cv;
 
 namespace camera {
 
-class FakeKinect : public AbstractRgbDepthCamera {
+class FileSource : public ImageSource {
 public:
-  FakeKinect(const string &directory);
+  FileSource(const string &directory);
 
-  CameraResponse get_rgb_depth_frame( RgbDepthFrame* frame);
+  CameraResponse get_image( Image* frame);
 
 private:
   void initialize();

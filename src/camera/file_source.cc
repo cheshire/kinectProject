@@ -1,10 +1,10 @@
-#include "fake_kinect.h"
+#include "file_source.h"
 
 #include <iostream>
 #include <unistd.h>
 
 #include "camera/constants.h"
-#include "camera/abstract_rgb_depth_camera.h"
+#include "camera/image_source.h"
 
 using namespace std;
 
@@ -16,12 +16,12 @@ namespace {
 
 namespace camera {
 
-FakeKinect::FakeKinect(const string &directory)
+FileSource::FileSource(const string &directory)
     : initialized(false), frame_count(0), last_time(time(NULL)), directory(directory) {
   cout << "Creating fake kinect." << endl;
 }
 
-void FakeKinect::initialize() {
+void FileSource::initialize() {
   cout << "FakeKinect: Initializing" << endl;
   int count = 0;
   while(1) {
@@ -54,7 +54,7 @@ void FakeKinect::initialize() {
   initialized = true;
 }
 
-CameraResponse FakeKinect::get_rgb_depth_frame(RgbDepthFrame *frame) {
+CameraResponse FileSource::get_image(Image *frame) {
   if (!initialized) {
     initialize();
   }
@@ -71,8 +71,8 @@ CameraResponse FakeKinect::get_rgb_depth_frame(RgbDepthFrame *frame) {
 
   cout << "FakeKinect: Getting Frame" << endl;
 
-  rgb_frames[frame_count].copyTo(frame->rgb_image);
-  depth_frames[frame_count].copyTo(frame->depth_image);
+  rgb_frames[frame_count].copyTo(frame->rgb);
+  depth_frames[frame_count].copyTo(frame->depth);
 
   frame_count = (frame_count + 1) % total_frame_count;
   return OK;

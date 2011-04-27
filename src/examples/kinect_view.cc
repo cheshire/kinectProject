@@ -10,11 +10,11 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
-#include "camera/abstract_rgb_depth_camera.h"
-#include "camera/fake_kinect.h"
+#include "camera/image_source.h"
+#include "camera/file_source.h"
 #include "camera/kinect_factory.h"
-#include "camera/kinect_recorder.h"
-#include "camera/rgb_depth_frame.h"
+#include "camera/file_writer.h"
+#include "camera/image.h"
 #include "camera/image_corrector.h"
 
 DEFINE_string(fake_kinect_data, "", "directory containing files for FakeKinect");
@@ -26,14 +26,15 @@ int main(int argc, char* argv[]) {
   google::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
   google::InstallFailureSignalHandler();
+
+  LOG(INFO) << "Initialized Google Addins.";
+
   bool running(true);
-  RgbDepthFrame frame;
-  Mat temp_depth;
+  Image frame;
+  Mat temp_depth, temp_rgb, mask;
   KinectFactory factory;
   ImageCorrector image_corrector;
-  KinectRecorder *recorder = NULL;
-  vector<RgbDepthFrame*> *frames = new vector<RgbDepthFrame*>;
-  AbstractRgbDepthCamera *device;
+  ImageSource *device;
 
   LOG(INFO) << "Creating KinectDevice";
   if (FLAGS_fake_kinect_data.empty()) {
@@ -45,11 +46,13 @@ int main(int argc, char* argv[]) {
 
   LOG(INFO) << "Creating Windows";
   namedWindow("rgb", CV_WINDOW_AUTOSIZE);
+  namedWindow("rgb_raw", CV_WINDOW_AUTOSIZE);
   namedWindow("depth", CV_WINDOW_AUTOSIZE);
+  namedWindow("depth_raw", CV_WINDOW_AUTOSIZE);
 
   while(running) {
     while (true){
-      CameraResponse r = device->get_rgb_depth_frame(&frame);
+      CameraResponse r = device->get_image(&frame);
       if (r == WAIT){
         continue;
       } else if (r == NO_FRAMES){
@@ -59,51 +62,49 @@ int main(int argc, char* argv[]) {
         break;
       }
     }
-        
-    LOG(INFO) << "undistoring";
+    cv::imshow("rgb_raw", frame.rgb);
+    frame.depth.convertTo(temp_depth, CV_8UC1, 50);
+    cv::imshow("depth_raw", temp_depth);
+
     image_corrector.undistort(frame);
-    LOG(INFO) << "aligning";
     image_corrector.align(frame);
     
-    cv::imshow("rgb", frame.rgb_image);
+    frame.depth.convertTo(temp_depth, CV_8UC1, 50);
+    mask = cv::Mat::zeros(frame.depth.size(), CV_8UC1);
 
-    frame.depth_image.convertTo(temp_depth, CV_8UC1, 150);//255.0/2048.0);
+    cv::MatIterator_<char> mask_it = mask.begin<char>(),
+        mask_it_end = mask.end<char>();
+    cv::MatIterator_<float> depth_it = frame.mapped_depth.begin<float>(),
+        depth_it_end = frame.mapped_depth.end<float>();
+
+    for (; mask_it != mask_it_end && depth_it != depth_it_end; ++mask_it, ++depth_it) {
+      if ((*depth_it) > 2.0 || (*depth_it) < 1.0) {
+        *mask_it = saturate_cast<char>(0);
+      } else {
+        *mask_it = saturate_cast<char>(1);
+      }
+    }
+
+
+    // Apply a threshold.
+    temp_rgb = cv::Mat::zeros(frame.rgb.size(), CV_8UC3);
+    frame.rgb.copyTo(temp_rgb, mask);
+    cv::imshow("rgb", temp_rgb);
 
     cv::imshow("depth", temp_depth);
 
-    if (recorder != NULL) {
-      RgbDepthFrame *new_frame = new RgbDepthFrame();
-      frame.rgb_image.copyTo(new_frame->rgb_image);
-      frame.depth_image.copyTo(new_frame->depth_image);
-      frames->push_back(new_frame);
-    }
 
     char k = cvWaitKey(10);
     switch (k) {
       case 27:
         cvDestroyWindow("rgb");
+        cvDestroyWindow("rgb_raw");
         cvDestroyWindow("depth");
         running = false;
-        if (recorder != NULL) {
-          delete recorder;
-        }
         break;
       case 119:
-        if (recorder == NULL) {
-          recorder = new KinectRecorder();
-          cout << "starting to record" << endl;
-        }
         break;
       case 101:
-        if (recorder != NULL) {
-          for (int i = 0, size = frames->size(); i < size; i ++) {
-            recorder->record(*(*frames)[i]);
-            delete (*frames)[i];
-          }
-          delete recorder;
-          recorder = NULL;
-          cout << "finished recording" << endl;
-        }
         break;
     }
   }

@@ -16,47 +16,16 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-#include "camera/rgb_depth_frame.h"
+#include "camera/image.h"
+#include "camera/camera_perspective.h"
 
 namespace camera {
 
-struct CameraCalibrationData {
-	double focal_x;
-	double focal_y;
-	double image_center_x;
-	double image_center_y;
-
-	// These will only be set for the RGB camera.
-	cv::Mat r;
-	cv::Mat t;
-
-	Eigen::Projective3d projective_transform;
-};
-
 class ImageCorrector {
 public:
-  ImageCorrector();
-
-  void undistort(RgbDepthFrame& frame);
+  void undistort(Image& frame);
   
-  void align(RgbDepthFrame& frame);
-private:
-  void load_calibration_data();
-
-  CameraCalibrationData rgb_camera, depth_camera;
-
-  struct {
-    cv::Mat rgb_intrinsics;
-    cv::Mat rgb_distortion;
-    cv::Mat depth_intrinsics;
-    cv::Mat depth_distortion;
-  } calibration_data;
-
-  cv::Mat rgb_undistort_map_1;
-  cv::Mat rgb_undistort_map_2;
-
-  cv::Mat depth_undistort_map_1;
-  cv::Mat depth_undistort_map_2;
+  void align(Image& frame);
 };
 
 }

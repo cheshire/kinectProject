@@ -1,17 +1,17 @@
 #include <assert.h>
 #include <iostream>
 
-#include "kinect_recorder.h"
+#include "file_writer.h"
 
 #include "camera/constants.h"
 
 namespace camera {
 
-KinectRecorder::KinectRecorder()
+FileWriter::FileWriter()
     : frame_count(0) {
 }
 
-void KinectRecorder::record(const RgbDepthFrame &frame) {
+void FileWriter::record(const Image &frame) {
   string rgb_filename =
       cv::format(FILENAME_FORMAT, RGB_FILENAME_BASE, frame_count, RGB_FILENAME_EXTENSION);
   string depth_filename =
@@ -19,10 +19,10 @@ void KinectRecorder::record(const RgbDepthFrame &frame) {
 
   std::cout << "writing " << frame_count << std::endl;
 
-  imwrite(rgb_filename.c_str(), frame.rgb_image);
+  imwrite(rgb_filename.c_str(), frame.rgb);
 
   FileStorage fs(depth_filename.c_str(), FileStorage::WRITE);
-  fs << "depth" << frame.depth_image;
+  fs << "depth" << frame.depth;
 
   frame_count++;
 }
