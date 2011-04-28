@@ -35,6 +35,10 @@ inline bool is_yx_in_range(const cv::Mat& image, int y, int x){
  * Aligns the RGB image with the depth image in place.
  */
 void ImageCorrector::align(Image& image) {
+  if (image.aligned) {
+    return;
+  }
+
   cv::Mat &mapped_colour = image.mapped_rgb;
   mapped_colour = cv::Mat3b(image.depth.size());
   cv::Mat &mapped_depth = image.mapped_depth;
@@ -73,6 +77,9 @@ void ImageCorrector::align(Image& image) {
  * Note: this does not align the RGB and Depth Images.
  */
 void ImageCorrector::undistort(Image& frame) {
+  if (frame.undistorted) {
+      return;
+    }
   cv::Mat depth_m, rgb;
 
   // 1. Undistort the images using the calibration data.

@@ -7,9 +7,8 @@
 #include "camera/camera_perspective.h"
 
 struct Image {
-  cv::Size size() {
-    return rgb.size();
-  }
+
+  Image() : aligned(false), undistorted(false) {}
 
   cv::Mat rgb;
   camera::CameraPerspective *rgb_perspective;
@@ -17,6 +16,9 @@ struct Image {
   camera::CameraPerspective *depth_perspective;
   cv::Mat raw_depth;
   time_t timestamp;
+
+  bool aligned;
+  bool undistorted;
 
   cv::Mat mapped_depth;
   cv::Mat mapped_rgb;

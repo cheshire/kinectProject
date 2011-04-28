@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 
   LOG(INFO) << "Creating KinectDevice";
   if (FLAGS_fake_kinect_data.empty()) {
-    device = factory.create_kinect();
+    device = factory.create_openni_kinect();
   } else {
     device = factory.create_kinect(FLAGS_fake_kinect_data);
   }
@@ -78,19 +78,19 @@ int main(int argc, char* argv[]) {
         depth_it_end = frame.mapped_depth.end<float>();
 
     for (; mask_it != mask_it_end && depth_it != depth_it_end; ++mask_it, ++depth_it) {
-      if ((*depth_it) > 2.0 || (*depth_it) < 1.0) {
+      if ((*depth_it) > 1.0 || (*depth_it) < 0.4) {
         *mask_it = saturate_cast<char>(0);
       } else {
         *mask_it = saturate_cast<char>(1);
       }
     }
 
-
-    // Apply a threshold.
+  // Apply a threshold.
     temp_rgb = cv::Mat::zeros(frame.rgb.size(), CV_8UC3);
-    frame.rgb.copyTo(temp_rgb, mask);
+    frame.mapped_rgb.copyTo(temp_rgb, mask);
     cv::imshow("rgb", temp_rgb);
 
+    frame.mapped_depth.convertTo(temp_depth, CV_8UC1, 50);
     cv::imshow("depth", temp_depth);
 
 
