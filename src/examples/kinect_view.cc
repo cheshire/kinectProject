@@ -16,10 +16,15 @@
 #include "camera/file_writer.h"
 #include "camera/image.h"
 #include "camera/image_corrector.h"
+#include "camera/background_filter.h"
+
+#include "mesh/mesh_viewer.h"
+#include "mesh/point_cloud.h"
 
 DEFINE_string(fake_kinect_data, "", "directory containing files for FakeKinect");
 
 using namespace camera;
+using namespace mesh;
 using namespace std;
 
 int main(int argc, char* argv[]) {
@@ -50,6 +55,8 @@ int main(int argc, char* argv[]) {
   namedWindow("depth", CV_WINDOW_AUTOSIZE);
   namedWindow("depth_raw", CV_WINDOW_AUTOSIZE);
 
+
+
   while(running) {
     while (true){
       CameraResponse r = device->get_image(&frame);
@@ -72,13 +79,15 @@ int main(int argc, char* argv[]) {
     frame.depth.convertTo(temp_depth, CV_8UC1, 50);
     mask = cv::Mat::zeros(frame.depth.size(), CV_8UC1);
 
+
+
     cv::MatIterator_<char> mask_it = mask.begin<char>(),
         mask_it_end = mask.end<char>();
     cv::MatIterator_<float> depth_it = frame.mapped_depth.begin<float>(),
         depth_it_end = frame.mapped_depth.end<float>();
 
     for (; mask_it != mask_it_end && depth_it != depth_it_end; ++mask_it, ++depth_it) {
-      if ((*depth_it) > 2.0 || (*depth_it) < 1.0) {
+      if ((*depth_it) > 1.0 || (*depth_it) < 0.4) {
         *mask_it = saturate_cast<char>(0);
       } else {
         *mask_it = saturate_cast<char>(1);
@@ -88,11 +97,20 @@ int main(int argc, char* argv[]) {
 
     // Apply a threshold.
     temp_rgb = cv::Mat::zeros(frame.rgb.size(), CV_8UC3);
-    frame.rgb.copyTo(temp_rgb, mask);
+    frame.mapped_rgb.copyTo(temp_rgb, mask);
     cv::imshow("rgb", temp_rgb);
 
-    cv::imshow("depth", temp_depth);
+    mask *= 255;
+    cv::imshow("depth", mask);
 
+    BackgroundFilter filter(frame);
+    filter.filter(frame, mask, temp_depth, mask);
+
+
+    //cv::imshow("depth", temp_depth);
+
+    PointCloud pc;
+    pc.add_image(frame, cv::Mat1b(frame.rgb.size()));
 
     char k = cvWaitKey(10);
     switch (k) {

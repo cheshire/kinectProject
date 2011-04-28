@@ -148,6 +148,34 @@ CameraPerspective::~CameraPerspective() {
 	// TODO Auto-generated destructor stub
 }
 
+// From Pose3d::unprojectFromImage
+void CameraPerspective::unproject_from_image(const cv::Mat1f& pixels, const cv::Mat1b& mask, cv::Mat3f voxels) const {
+  Eigen::Vector4d epix;
+  Eigen::Vector4d evox;
+
+  epix(3) = 1;
+
+  for (int r = 0; r < pixels.rows; ++r)
+  {
+    const float* pixels_data = pixels.ptr<float>(r);
+    const uchar* mask_data = mask.ptr<uchar>(r);
+    cv::Vec3f* voxels_data = voxels.ptr<cv::Vec3f>(r);
+    for (int c = 0; c < pixels.cols; ++c)
+    {
+      if (!mask[c])
+        continue;
+      const float d = pixels_data[c];
+      epix(0) = c*d;
+      epix(1) = r*d;
+      epix(2) = d;
+      evox = inverse_projective_transform * epix;
+      voxels_data[c][0] = evox(0);
+      voxels_data[c][1] = evox(1);
+      voxels_data[c][2] = evox(2);
+    }
+  }
+}
+
 /* From https://github.com/nburrus/nestk/blob/master/ntk/geometry/pose_3d.cpp */
 cv::Vec3f CameraPerspective::unproject_from_image(int x, int y, float depth) {
   Eigen::Vector4d img(x * depth, y * depth, depth, 1);
@@ -164,6 +192,32 @@ cv::Point3f CameraPerspective::project_to_image(const cv::Point3f &p) {
   r(1) /= r(2);
 
   return to_vec3f(r);
+}
+
+void CameraPerspective::project_to_image(const cv::Mat3f& voxels, const cv::Mat1b& mask, cv::Mat3f& pixels) const
+{
+  Eigen::Vector4d epix;
+  Eigen::Vector4d evox;
+  evox(3) = 1; // w does not change.
+
+  for (int r = 0; r < voxels.rows; ++r)
+  {
+    const cv::Vec3f* voxels_data = voxels.ptr<cv::Vec3f>(r);
+    const uchar* mask_data = mask.ptr<uchar>(r);
+    cv::Vec3f* pixels_data = pixels.ptr<cv::Vec3f>(r);
+    for (int c = 0; c < voxels.cols; ++c)
+    {
+      if (!mask[c])
+        continue;
+      evox(0) = voxels_data[c][0];
+      evox(1) = voxels_data[c][1];
+      evox(2) = voxels_data[c][2];
+      epix = projective_transform * evox;
+      pixels_data[c][0] = epix(0)/epix(2);
+      pixels_data[c][1] = epix(1)/epix(2);
+      pixels_data[c][2] = epix(2);
+    }
+  }
 }
 
 

@@ -6,6 +6,7 @@ find_package(libusb-1.0 REQUIRED)
 find_package(GFlags REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Glog REQUIRED)
+find_package(OpenGL)
 
 include_directories(${LIBFREENECT_INCLUDE_DIR})
 include_directories(${GLOG_INCLUDE_DIRS})
@@ -24,8 +25,10 @@ add_definitions(-Wall -I${CMAKE_SOURCE_DIR}/src)
 
 file(GLOB CAMERA_LIB "camera/*.cc")
 file(GLOB UTIL_LIB "util/*.cc")
+file(GLOB MESH_LIB "mesh/*.cc")
 include_directories(camera)
 include_directories(util)
+include_directories(mesh)
 
 # Libraries
 
@@ -34,6 +37,9 @@ add_library(util ${UTIL_LIB})
 add_library(camera ${CAMERA_LIB})
 target_link_libraries(camera util ${THIRD_PARTY_LIB})
 
+add_library(mesh ${MESH_LIB})
+target_link_libraries(mesh camera util ${THIRD_PARTY_LIB} ${OPENGL_LIBRARY})
+
 add_executable(kinect_view examples/kinect_view.cc)
-target_link_libraries(kinect_view camera util)
-target_link_libraries(kinect_view ${LIBFREENECT_LIBRARY} ${LIBUSB_1_LIBRARIES} ${OpenCV_LIBS} ${GFlags_LIBS} ${GLOG_LIBRARIES})
+target_link_libraries(kinect_view camera util mesh)
+target_link_libraries(kinect_view ${LIBFREENECT_LIBRARY} ${LIBUSB_1_LIBRARIES} ${OpenCV_LIBS} ${GFlags_LIBS} ${GLOG_LIBRARIES} ${OPENGL_LIBRARY})

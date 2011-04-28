@@ -56,7 +56,9 @@ public:
 	 * and depth.
 	 */
 	cv::Vec3f unproject_from_image(int x, int y, float depth);
+	void unproject_from_image(const cv::Mat1f& pixels, const cv::Mat1b& mask, cv::Mat3f voxels) const;
 	cv::Point3f project_to_image(const cv::Point3f &p);
+	void project_to_image(const cv::Mat3f& voxels, const cv::Mat1b& mask, cv::Mat3f& pixels) const;
 };
 
 }
