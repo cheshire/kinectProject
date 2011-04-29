@@ -10,4 +10,8 @@ FileSource *KinectFactory::create_kinect(const string &directory) {
   return new FileSource(directory);
 }
 
+OpenNIKinectSource *KinectFactory::create_openni_kinect() {
+  return new OpenNIKinectSource();
+}
+
 }

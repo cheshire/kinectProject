@@ -73,6 +73,12 @@ CameraResponse FileSource::get_image(Image *frame) {
 
   rgb_frames[frame_count].copyTo(frame->rgb);
   depth_frames[frame_count].copyTo(frame->depth);
+  rgb_frames[frame_count].copyTo(frame->mapped_rgb);
+  depth_frames[frame_count].copyTo(frame->mapped_depth);
+
+  // TODO(laurencer): encode values in the files somehow.
+  frame->aligned = true;
+  frame->undistorted = true;
 
   frame_count = (frame_count + 1) % total_frame_count;
   return OK;

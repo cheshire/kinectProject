@@ -2,7 +2,7 @@
 This was based on an install on a fresh Ubuntu 10.04 system (with build-essentials installed).
 
 1) install prerequisites
-sudo apt-get install git-core cmake libglut3-dev pkg-config build-essential libxmu-dev libxi-dev libusb-1.0-0-dev libgtk2.0-dev pkg-config
+sudo apt-get install git-core cmake libglut3-dev pkg-config build-essential libxmu-dev libxi-dev libusb-1.0-0-dev libgtk2.0-dev pkg-config freeglut3-dev
 
 2) install opencv
 * download the latest version from http://opencv.willowgarage.com/wiki/ (it should be version 2.2 located http://sourceforge.net/projects/opencvlibrary/files/opencv-unix/2.2/OpenCV-2.2.0.tar.bz2/download)
@@ -48,7 +48,21 @@ sudo apt-get install git-core cmake libglut3-dev pkg-config build-essential libx
 * make -j 4
 * sudo make install
 
-7) build kinectProject!
+7) install openni
+* git clone git://github.com/OpenNI/OpenNI.git
+* cd OpenNI/Platform/Linux-x86/CreateRedist
+* ./RedistMaker
+* cd ../Redist
+* sudo ./install.sh
+
+9) install primesense driver (kinect driver for openni)
+* git git://github.com/avin2/SensorKinect.git
+* cd SensorKinect/Platform/Linux-x86/CreateRedist/
+* ./RedistMaker
+* cd ../Redist
+* sudo ./install.sh
+
+9) build kinectProject!
 * cd kinectProject
 * mkdir bin
 * cd bin
