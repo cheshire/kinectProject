@@ -6,7 +6,8 @@
 enum CameraResponse {
   NO_FRAMES, 
   WAIT,
-  OK
+  OK,
+  BROKEN_IMAGE
 };
 
 class ImageSource {

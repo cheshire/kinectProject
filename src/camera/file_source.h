@@ -22,16 +22,22 @@ public:
 
 private:
   void initialize();
-
+  
+  // Get the rgb filename for the given count.
+  string get_rgb_filename(int count);
+  
+  // Get the depth filename for the given count.
+  string get_depth_filename(int count);
+  
   bool initialized;
+  
+  // Count of the current frame shown by the FileSource.
   int frame_count;
+  
+  // Number of the total frames found.
   int total_frame_count;
-  time_t last_time;
 
   string directory;
-
-  vector<Mat> rgb_frames;
-  vector<Mat> depth_frames;
 };
 }
 

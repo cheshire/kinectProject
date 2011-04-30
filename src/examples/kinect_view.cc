@@ -132,9 +132,11 @@ int main(int argc, char* argv[]) {
       CameraResponse r = device->get_image(&frame);
       if (r == WAIT){
         continue;
-      } else if (r == NO_FRAMES){
+      } else if (r == NO_FRAMES) {
         LOG(ERROR) << "No files found in the given directory, aborting";
         exit(0);
+      } else if (r == BROKEN_IMAGE){
+        LOG(ERROR) << "Image can not be read, aborting";
       } else if (r == OK){
         break;
       }
