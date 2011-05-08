@@ -37,8 +37,6 @@ void FileSource::initialize() {
     string depth_filename = get_depth_filename(total_frame_count);
     
     // Check that both files exist.
-    cout << rgb_filename << endl;
-    cout << depth_filename << endl;
     if(access(rgb_filename.c_str(), F_OK) != -1 && access(depth_filename.c_str(), F_OK) != -1) {
       
       total_frame_count++;

@@ -36,6 +36,7 @@ void check_error(const XnStatus& status, const char* what) {
 void ensure(bool assert, const char* what) {
   if (!assert) {
     LOG(ERROR) << what;
+    exit(1);
   }
 }
 
@@ -49,6 +50,7 @@ OpenNIKinectSource::OpenNIKinectSource()
   xn::EnumerationErrors errors;
 
   // TODO(laurencer): add status code checking.
+  LOG(INFO) << "Loading config file";
   XnStatus status = context.InitFromXmlFile(config_file, &errors);
   check_error(status, xnGetStatusString(status));
   status = context.FindExistingNode(XN_NODE_TYPE_DEPTH, depth_generator);
