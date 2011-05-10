@@ -33,6 +33,8 @@ DEFINE_bool(show_gui, true, "Show the images currently processed");
 using namespace camera;
 using namespace std;
 
+cv::Scalar RANDOM_COLOR(255, 255, 0);
+
 struct EllipticalContour {
   double contour_area;
   double error;
@@ -94,7 +96,7 @@ bool create_elliptical_contour(EllipticalContour &result, int min_size = 400) {
  * 
  * @return vector of found contours.
  */
-vector<EllipticalContour> find_circles(const cv::Mat &rgb_image,
+vector<EllipticalContour> find_circles(const cv::Mat rgb_image,
                   cv::Mat visualisation,
                   int blur_amount = 7,
                   int canny_threshold1 = 125,
@@ -117,8 +119,8 @@ vector<EllipticalContour> find_circles(const cv::Mat &rgb_image,
     bool contour_created = create_elliptical_contour(result);
 
     if (contour_created) {
-      cv::Scalar color(rand()&255, rand()&255, rand()&255);
-      cv::drawContours(visualisation, contours, i, color, CV_FILLED);
+      
+      cv::drawContours(visualisation, contours, i, RANDOM_COLOR, CV_FILLED);
       
       results.push_back(result);
     }        
@@ -380,13 +382,15 @@ int main(int argc, char* argv[]) {
   
     if (homography_found) {
       bool status = find_orientation_angle(homography,
-        visualisation,
         frame.mapped_rgb,
+        visualisation,
         orientation_angle
       );
       if (!status) {
         // Can't procede without orientation angle.
         LOG(INFO) << "Skipping incorrect frame";
+      } else {
+        LOG(INFO) << "ANGLE: " << orientation_angle;
       }
     }
 
