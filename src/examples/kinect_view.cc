@@ -26,13 +26,11 @@
 #include "mesh/point_cloud.h"
 
 DEFINE_string(fake_kinect_data, "", "directory containing files for FakeKinect");
-DEFINE_int32(chessboard_width, 6, "Number of internal chessboard corners in width");
-DEFINE_int32(chessboard_height, 6, "Number of internal chessboard corners in height");
-DEFINE_bool(detect_circles, false, "Run the circle-detection algorithm and report on results");
+DEFINE_int32(chessboard_width, 3, "Number of internal chessboard corners in width");
+DEFINE_int32(chessboard_height, 3, "Number of internal chessboard corners in height");
 DEFINE_bool(show_gui, true, "Show the images currently processed");
 
 using namespace camera;
-using namespace mesh;
 using namespace std;
 
 struct EllipticalContour {
@@ -48,6 +46,23 @@ struct EllipticalContourComparison {
   }
 };
 
+template <typename T>
+/**
+ * Create and return a vector containing obj.
+ */
+vector<T> one_element_vector(T obj){
+  vector<T> temp;
+  temp.push_back(obj);
+  return temp;
+}
+
+
+/**
+ * Tries to fit an ellipse onto a contour, if an ellipse
+ * was found sets it's center and the possible error to struct.
+ * 
+ * @return Whether the elliptical contour was found.
+ */
 bool create_elliptical_contour(EllipticalContour &result, int min_size = 400) {
   result.contour_area = cv::contourArea(cv::Mat(result.contour));
 
@@ -64,39 +79,53 @@ bool create_elliptical_contour(EllipticalContour &result, int min_size = 400) {
   //
   // The error is divided by the area so it is a proportion (otherwise a small area
   // would always have a smaller error than a larger area).
-  result.error = abs(ellipse.size.width * ellipse.size.height * 3.14 - result.contour_area)
-      / result.contour_area;
+  result.error = abs(ellipse.size.width * ellipse.size.height * M_PI
+      - result.contour_area) / result.contour_area;
 
   return true;
 }
 
 
-void find_circles(cv::Mat &rgb_image, vector<EllipticalContour> &results, int blur_amount = 7,
-    int canny_threshold1 = 125, int canny_threshold2 = 200, int canny_aperture_size = 3) {
+/**
+ * Find ellipses in the given image.
+ * 
+ * @param rgb_image Image to find the contours in.
+ * @param visualisation Canvas to draw any visualisations upon.
+ * 
+ * @return vector of found contours.
+ */
+vector<EllipticalContour> find_circles(const cv::Mat &rgb_image,
+                  cv::Mat visualisation,
+                  int blur_amount = 7,
+                  int canny_threshold1 = 125,
+                  int canny_threshold2 = 200,
+                  int canny_aperture_size = 3) {
+  vector<EllipticalContour> results;
   cv::Mat gray, edges;
   cv::cvtColor(rgb_image, gray, CV_BGR2GRAY);
   cv::GaussianBlur(gray, gray, Size(blur_amount, blur_amount), 2, 2);
 
   // Find edges and contours.
   vector<vector<cv::Point> > contours;
-  cv::Canny(gray, edges, canny_threshold1, canny_threshold2, canny_aperture_size, false);
-  cv::findContours(edges, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
-
-  cv::Mat temp = rgb_image.clone();
-  cv::Scalar color( rand()&255, rand()&255, rand()&255);
-  cv::drawContours( temp, contours, -1, color, CV_FILLED);
-  cv::imshow("depth", temp);
+  cv::Canny(gray, edges, canny_threshold1, canny_threshold2,
+            canny_aperture_size, false);
+  cv::findContours(edges, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);  
 
   for (size_t i = 0, len = contours.size(); i < len; i++) {
     EllipticalContour result;
     result.contour = contours[i];
+    bool contour_created = create_elliptical_contour(result);
 
-    if (create_elliptical_contour(result)) {
+    if (contour_created) {
+      cv::Scalar color(rand()&255, rand()&255, rand()&255);
+      cv::drawContours(visualisation, contours, i, color, CV_FILLED);
+      
       results.push_back(result);
-    }
+    }        
   }
 
   sort(results.begin(), results.end(), EllipticalContourComparison());
+  return results;
 }
 
 /**
@@ -104,11 +133,15 @@ void find_circles(cv::Mat &rgb_image, vector<EllipticalContour> &results, int bl
  * we will write the homography. Otherwise, return 0.
  * 
  * @param img Undistorted image. 
+ * @param homography Output param to write homography into.
+ * @param visualisation Canvas to draw any visualisations upon.
  * 
  * @return Whether homography was found
  */
-int find_homography(Mat img){
-  bool homography_found = false;
+int find_homography(const cv::Mat img,
+                    cv::Mat visualisation,
+                    cv::Mat& homography){
+  vector<Point2f> dst_points;
   
   // Let's see whether we can find chessboard.
   vector<cv::Point2f> chessboard_corners;
@@ -120,66 +153,188 @@ int find_homography(Mat img){
     chessboard_corners
   );
   
-  // Drawing is optional -- good for debugging
-  cv::drawChessboardCorners(img, 
+  if (!found) {
+    
+    // No chessboard -> no homography.
+    return false;
+  }
+  
+  cv::drawChessboardCorners(visualisation, 
     cv::Size(FLAGS_chessboard_width,
       FLAGS_chessboard_height
     ),
     cv::Mat(chessboard_corners),
     found
   );
+            
+  if (!(FLAGS_chessboard_height % 2 == 1 
+        && FLAGS_chessboard_width % 2 == 1)){
+    LOG(ERROR) << "Chessboard with odd number of internal"
+               << "corners is required; aborting";
+    exit(1);
+  }
   
-  // We define our coordinate center to be
-  // the center. We define size of the chessboard
-  // square to be the unit length.
+  // Coordinates of the points on the lazy susan plane.
+  // center of the chessboard is defined to be (0, 0), 
+  // size of the cell is defined as a unit length.
+  for (int y=(FLAGS_chessboard_height/2); y >= -(FLAGS_chessboard_height/2); y--) {
+    for (int x=-(FLAGS_chessboard_width/2); x<=(FLAGS_chessboard_width/2); x++) { 
+      
+      // Point2f(x, y), though in matrix you specify
+      // the column first. Amount of sense it makes: none.
+      dst_points.push_back(Point2f(x, y));
+    }
+  }
   
-  
-  // Apparently the only way to do manual data entry into Mat
-  // is to declare it first as Matx and then convert to Mat.
-  
-  // TODO(george) - generalize away from 9 corners?
-  float _dst_points[2][9] = {{-1, 0, 1, -1, 0, 1, -1, 0, 1},                                                                                                 
-                    {1, 1, 1, 0, 0, 0, -1, -1, -1}};  
-                    
-  // TODO(george) - just write out everything as vectorS!!
-  cv::Mat dst_points = cv::Mat(2, 9, CV_32F, _dst_points);
-
-  cv::Mat homography;
-  homography = cv::findHomography(chessboard_corners, );
-  cout << homography << endl;
-  
-  
-/*  cv::transpose(src_points_, src_points);
-  cout << chessboard_corners << endl;
-  cout << "Original array is " << endl << Mat(chessboard_corners) << endl;
-  cout << "Transposed array is " << endl << src_points << endl;
-  
-  cout << "(0, 1) element in original array: " << endl;
-  cout << Mat(chessboard_corners).at<float>(0, 1) << endl;
-  
-  cout << "(0, 1) element in transposed array: " << endl;
-  cout << src_points.at<float>(0, 1) << endl;*/
-  LOG(INFO) << "Found chessboard is " << found;
-  
-  return homography_found;
+  // Homography FROM camera plane (src) TO lazy susan plane (dst).
+  homography = cv::findHomography(Mat(chessboard_corners), // src
+                                  Mat(dst_points) 
+  );
+  return true;
 }
+
+/**
+ * Get the frame from the device provided.
+ * 
+ * @param device Device to get the data from.
+ * @param corrector Corrector object which aligns/undistorts
+ * rgb_image and depth.
+ * 
+ * @return undistorted and aligned frame.
+ */
+Image get_frame(ImageSource *device, ImageCorrector *corrector){
+  Image frame;
+  
+  while (true){
+    CameraResponse r = device->get_image(&frame);
+    if (r == WAIT){
+      usleep(200 * 1000);
+      continue;
+    } else if (r == NO_FRAMES) {
+      LOG(ERROR) << "No files found in the given directory, aborting";
+      exit(0);
+    } else if (r == BROKEN_IMAGE){
+      LOG(ERROR) << "Image can not be read, aborting";
+      exit(0);
+    } else if (r == OK){
+      break;
+    }
+  }
+  
+  corrector->undistort(frame);
+  corrector->align(frame);
+  
+  return frame;
+}
+
+/**
+ * Get the orientation angle of the turntable.
+ * 
+ * @param homography Homography matrix for the translation
+ * from/to LS plane.
+ * @param rgb_image Image of the turntable.
+ * @param visualisation Anything we might want to visualise.
+ * @param orientation_angle Output param to write orientation angle
+ * into. It is measured in the range of -\pi to +\pi. We can detect
+ * full rotation from an abrupt jump from ~ \pi to ~ -\pi.
+ * 
+ * @return Whether the angle was found.
+ */
+bool find_orientation_angle(
+  const Mat homography,
+  const Mat rgb_image,
+  Mat visualisation,
+  float& orientation_angle
+){  
+  // Run the contour detection algorithm and detect
+  // two black circles on lazy susan.           
+  vector<EllipticalContour> contours = find_circles(rgb_image,
+    visualisation
+  );
+  
+  // (Up to) two angles corresponding (up to) two circles.
+  float orientation_angle_[2];
+
+  LOG(INFO) << "Found " << contours.size() << " ellipses.";
+    
+  // If we have more then 2 ellipses - something is wrong.
+  // If we don't see any - something is wrong as well.
+  if (contours.size() == 0 || contours.size() > 2) {
+    LOG(ERROR) << "Incorrect number of ellipses detected - "
+                << contours.size() << " => orientation detection"
+                << " is impossible.";
+    return false;
+  }
+  for (unsigned i=0; i<contours.size(); i++) {    
+    vector<Point3f> h_center; // One-element output vector.
+    
+    convertPointsHomogeneous(
+      // Circle center in camera plane coordinates.
+      Mat(one_element_vector<Point2f>(contours.at(i).circle_center)),
+      
+      // Output
+      h_center);
+    
+    // Circle center in camera plane homogeneous coordinates.
+    Point3d d_h_center = h_center.at(0);
+        
+    // Center in turntable homogeneous coordinates.
+    Point3f center_h = Mat(homography * Mat(d_h_center)).at<Point3d>(0, 0);    
+    
+    // One element output vector
+    vector<Point2f> center_temp;
+
+    // Converting back from homogeneous coordinates.
+    convertPointsHomogeneous(
+      Mat(one_element_vector<Point3f>(center_h)),
+      center_temp);
+    
+    // Circle center in turntable coordinates.
+    Point2f center = center_temp.at(0);
+    
+    if (center.x == 0) {
+      orientation_angle_[i] = M_PI/2;
+    } else {
+      orientation_angle_[i] = atan(center.y/center.x);
+    }
+  }
+  
+  /* 
+   * Note - from the property of atan the found angle lies in the
+   * range -pi/2 to +pi/2. If everything went right, two found angles
+   * should be (almost) equal.
+   */
+  if (contours.size() == 2) {
+    // If everything went right, two found angles should be (almost) exactly
+    
+    LOG(INFO) << "Two circles were seen, angles are "
+              << orientation_angle_[0] << " and " << orientation_angle_[1];
+    orientation_angle = (orientation_angle_[0] + orientation_angle_[1]) / 2;
+  } else {
+    orientation_angle = orientation_angle_[0];
+  }
+  return true;
+}
+
 
 int main(int argc, char* argv[]) {
   google::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
   google::InstallFailureSignalHandler();
 
-  LOG(INFO) << "Initialized Google Addins.";
-
   bool running(true);
+  bool homography_found(false);
+  Mat homography;
   Image frame;
-  Mat temp_depth, temp_rgb, mask;
+  Mat visualisation;
   KinectFactory factory;
-  ImageCorrector image_corrector;
+  ImageCorrector *image_corrector;
   ImageSource *device;
   FileWriter writer;
   bool recording = false;
+  float orientation_angle;
   vector<Image*> recorded_images;
+  
 
   LOG(INFO) << "Creating KinectDevice";
   if (FLAGS_fake_kinect_data.empty()) {
@@ -191,80 +346,62 @@ int main(int argc, char* argv[]) {
 
   if (FLAGS_show_gui) {
     namedWindow("rgb", CV_WINDOW_AUTOSIZE);
-    namedWindow("rgb_raw", CV_WINDOW_AUTOSIZE);
     namedWindow("depth", CV_WINDOW_AUTOSIZE);
-    namedWindow("depth_raw", CV_WINDOW_AUTOSIZE);
+    namedWindow("visualisation", CV_WINDOW_AUTOSIZE);
   }
 
+  cout << "Chessboard calibration is required to figure out the "
+        << "lazy susan orientation. Camera should be facing at empty" 
+        << " turntable with the chessboard on it."<< endl;    
   while(running) {
-    while (true){
-      CameraResponse r = device->get_image(&frame);
-      if (r == WAIT){
-        usleep(200 * 1000);
-        continue;
-      } else if (r == NO_FRAMES) {
-        LOG(ERROR) << "No files found in the given directory, aborting";
-        exit(0);
-      } else if (r == BROKEN_IMAGE){
-        LOG(ERROR) << "Image can not be read, aborting";
-        exit(0);
-      } else if (r == OK){
-        break;
-      }
-    }
-        
     
-    frame.depth.convertTo(temp_depth, CV_8UC1, 50);
-    if (FLAGS_show_gui) {
-      cv::imshow("rgb_raw", frame.rgb);
-      cv::imshow("depth_raw", temp_depth);
-    }
-
-    image_corrector.undistort(frame);
-    image_corrector.align(frame);
-    
-    find_homography(frame.mapped_rgb);
-    
-    frame.depth.convertTo(temp_depth, CV_8UC1, 50);
-    mask = cv::Mat::zeros(frame.depth.size(), CV_8UC1);
-    
-    if (FLAGS_show_gui) {
-      cv::imshow("rgb", frame.mapped_rgb);
-      cv::imshow("depth", frame.mapped_depth);
-    }
-
+    frame = get_frame(device, image_corrector);
     if (recording) {
       Image *img = new Image();
       img->rgb = frame.rgb.clone();
       img->depth = frame.depth.clone();
       recorded_images.push_back(img);
-    }        
-
-    // Run the contour detection algorithm and detect
-    // two black circles on lazy susan.
-    if (FLAGS_detect_circles) {
-        //RGB Experiments
-      frame.mapped_rgb.copyTo(temp_rgb);
-      vector<EllipticalContour> contours;
-      find_circles(frame.mapped_rgb, contours);
-
-      LOG(INFO) << "Found " << contours.size() << " ellipses.";
-      for (size_t i = 0; i < 5 && i < contours.size(); i++) {
-        cv::Scalar color( rand()&255, rand()&255, rand()&255);
-        vector<vector<cv::Point> > single_contour;
-        single_contour.push_back(contours[i].contour);
-        cv::drawContours( temp_rgb, single_contour, -1, color, CV_FILLED);
-        LOG(INFO) << "Contour: size->" << contours[i].contour_area << " error->" << contours[i].error;
+    }
+    
+    // any visualisations on top of rgb image.
+    frame.mapped_rgb.copyTo(visualisation); 
+    
+    if (!homography_found) {
+      homography_found = find_homography(frame.mapped_rgb,
+                                         visualisation, homography);
+      if (homography_found) {
+        cout << "Homography was found, chessboard calibration is no" 
+            << " longer required. Please place an object on lazy susan"
+            << " and press any key to continue" << endl;
+        cout << homography << endl;
+        cvWaitKey(0);
       }
+    }
+  
+    if (homography_found) {
+      bool status = find_orientation_angle(homography,
+        visualisation,
+        frame.mapped_rgb,
+        orientation_angle
+      );
+      if (!status) {
+        // Can't procede without orientation angle.
+        LOG(INFO) << "Skipping incorrect frame";
+      }
+    }
+
+    if (FLAGS_show_gui) {
+      cv::imshow("rgb", frame.mapped_rgb);
+      cv::imshow("depth", frame.mapped_depth);
+      cv::imshow("visualisation", visualisation);
     }
 
     char k = cvWaitKey(10);
     switch (k) {
-      case 27:
+      case 27: // Esc
         cvDestroyWindow("rgb");
-        cvDestroyWindow("rgb_raw");
         cvDestroyWindow("depth");
-        cvDestroyWindow("depth_raw");
+        cvDestroyWindow("visualisation");
         running = false;
         break;
       case 119: // w

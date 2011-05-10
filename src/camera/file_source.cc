@@ -55,7 +55,7 @@ CameraResponse FileSource::get_image(Image *frame) {
   if (!initialized) {
     initialize();
   }
-  cout << "Total frame count is " << total_frame_count << endl;
+  std::cout << "Total frame count is " << total_frame_count << endl;
   if (total_frame_count == 0){
     
     // No frames were recorded, abort.
