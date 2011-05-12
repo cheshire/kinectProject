@@ -1,4 +1,7 @@
+#define _USE_MATH_DEFINES
+
 #include <cv.h>
+#include <cmath>
 #include <highgui.h>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
@@ -25,7 +28,9 @@ namespace {
 }
 
 void OrientationDetector::initialize(){
- 
+  int *value = new int(0);
+  namedWindow("angle", CV_WINDOW_AUTOSIZE);
+  createTrackbar("t_angle", "angle", value, (int) (M_PI*1000));
 }
 
 
@@ -102,6 +107,8 @@ bool OrientationDetector::find_orientation_angle(
   } else {
     orientation_angle = orientation_angle_[0];
   }
+  setTrackbarPos("t_angle", "angle", (int) ((orientation_angle + (M_PI/2)) * 1000));
+  
   return true;
 }
 

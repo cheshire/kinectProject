@@ -62,6 +62,7 @@ int main(int argc, char* argv[]) {
   ImageSource *device;
   FileWriter writer;
   orientationdetector::OrientationDetector orientation_detector;
+  orientation_detector.initialize();
   
   vector<Image*> recorded_images;
   float orientation_angle;
@@ -80,7 +81,7 @@ int main(int argc, char* argv[]) {
     namedWindow("visualisation", CV_WINDOW_AUTOSIZE);
   }
 
-  cout << "Chessboard calibration is required to figure out the "
+  std::cout << "Chessboard calibration is required to figure out the "
         << "lazy susan orientation. Camera should be facing at empty" 
         << " turntable with the chessboard on it."<< endl;    
   while(running) {
