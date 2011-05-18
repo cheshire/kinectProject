@@ -52,6 +52,7 @@ int main(int argc, char* argv[]) {
   bool running(true);
   bool homography_found(false);
   bool recording(false);
+  bool calibrating(false);
   
   Image frame;
   Mat homography;  
@@ -80,6 +81,7 @@ int main(int argc, char* argv[]) {
 
   if (FLAGS_show_gui) {
     namedWindow("rgb", CV_WINDOW_AUTOSIZE);
+    namedWindow("object", CV_WINDOW_AUTOSIZE);
     namedWindow("depth", CV_WINDOW_AUTOSIZE);
     namedWindow("visualisation", CV_WINDOW_AUTOSIZE);
   }
@@ -112,10 +114,19 @@ int main(int argc, char* argv[]) {
             << " and press any key to continue" << endl;
         cout << homography << endl;
         cvWaitKey(0);
+        calibrating = true;
       }
     }
-  
-    if (homography_found) {
+
+    if (calibrating) {
+      frame.masked_rgb = frame.mapped_rgb;
+      frame.masked_depth = frame.mapped_depth;
+      filter.add_calibration_image(frame);
+      char k = cvWaitKey(1);
+      if (k == 105) {  // i
+        calibrating = false;
+      }
+    } else if (homography_found) {
       if (center_depth == 0) {
         // If we don't have a depth for the chessboard, calculate it.
         Point center = orientation_detector.get_chessboard_centre_in_image(homography);
@@ -125,13 +136,18 @@ int main(int argc, char* argv[]) {
         frame.masked_depth = frame.mapped_depth;
       } else {
         // If we do have a depth for the chessboard, filter it.
-        filter.filter(frame, center_depth - 0.2, center_depth + 0.2);
+        filter.filter(frame, center_depth - 0.1, center_depth + 0.05);
       }
+
       bool status = orientation_detector.find_orientation_angle(homography,
         frame.masked_rgb,
         visualisation,
         orientation_angle
       );
+
+      cv::Mat1b mask = filter.filter_object(frame);
+      cv::imshow("rgb", frame.masked_rgb);
+      filter.apply_mask(frame, mask, true);
       if (!status) {
         // Can't procede without orientation angle.
         LOG(INFO) << "Skipping incorrect frame";
@@ -142,7 +158,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (FLAGS_show_gui) {
-      cv::imshow("rgb", frame.masked_rgb);
+      cv::imshow("object", frame.masked_rgb);
       cv::imshow("depth", frame.mapped_depth);
       cv::imshow("visualisation", visualisation);
     }
@@ -150,7 +166,7 @@ int main(int argc, char* argv[]) {
     char k = cvWaitKey(10);
     switch (k) {
       case 27: // Esc
-        cvDestroyWindow("rgb");
+        cvDestroyWindow("object");
         cvDestroyWindow("depth");
         cvDestroyWindow("visualisation");
         running = false;

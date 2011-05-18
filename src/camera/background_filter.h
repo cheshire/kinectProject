@@ -15,6 +15,9 @@
 namespace camera {
 
 class BackgroundFilter {
+  cv::Mat1f depth_max;
+  cv::Mat1f depth_min;
+  bool range_initialized;
 public:
   BackgroundFilter();
   virtual ~BackgroundFilter();
@@ -27,6 +30,15 @@ public:
    *
    */
   void filter(Image &image, double start_depth, double end_depth);
+
+  cv::Mat1b filter_object(Image &image);
+
+  void apply_mask(Image &image, cv::Mat1b mask, bool use_existing_mask);
+
+  /**
+   * Adds the image as a calibration image used for range filtering.
+   */
+  void add_calibration_image(const Image &image);
 
 };
 
