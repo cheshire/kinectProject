@@ -22,6 +22,10 @@ struct Image {
 
   cv::Mat mapped_depth;
   cv::Mat mapped_rgb;
+
+  cv::Mat1b mask;
+  cv::Mat3b masked_rgb;
+  cv::Mat1f masked_depth;
 };
 
 #endif

@@ -11,37 +11,45 @@
 
 namespace camera {
 
-BackgroundFilter::BackgroundFilter(const Image &image) : blur(cv::Size(75,75)),
-    threshold(100) {
-  cv::GaussianBlur(image.mapped_rgb, previous_rgb, blur, 0, 0);
-  cv::GaussianBlur(image.depth, previous_depth, blur, 0, 0);
-
+BackgroundFilter::BackgroundFilter() {
 }
 
-void BackgroundFilter::filter(const Image &image, cv::Mat &static_background,
-      cv::Mat &dynamic_background, cv::Mat &object) {
-  cv::Mat temp_rgb = image.mapped_rgb.clone(),
-      temp_depth = image.depth.clone(),
-      temp_rgb_thres,
-      temp_depth_thres;
+void BackgroundFilter::filter(Image &image, double start_depth, double end_depth) {
+  cv::Mat1f depth = image.mapped_depth;
+  image.mask.create(image.mapped_depth.size());
 
-
-  cv::GaussianBlur(image.mapped_rgb, temp_rgb, cv::Size(5,5), 0, 0);
-  cv::GaussianBlur(image.depth, temp_depth, cv::Size(5,5), 0, 0);
-
-  if (previous_rgb.type() != temp_rgb.type()) {
-    LOG(INFO) << "skipping";
-    temp_rgb.copyTo(previous_rgb);
-    temp_depth.copyTo(previous_depth);
-    return;
+  for (int r = 0; r < depth.rows; r++) {
+    for (int c = 0; c < depth.cols; c++) {
+      int value = 0;
+      if (depth(r,c) < end_depth && depth(r,c) > start_depth) {
+        value = 255;
+      }
+      image.mask(r,c) = value;
+    }
   }
 
-  cv::absdiff(previous_rgb, temp_rgb, temp_rgb);
-  cv::absdiff(previous_depth, temp_depth, temp_depth);
+  // Try and fill in the main region by detecting the outer contours;
+  // this should negate the noise to an extent - although it only works
+  // if the center region's depth is continuous.
+  cv::Mat temp = image.mask.clone();
+  vector< vector<cv::Point> > contours;
+  cv::findContours(temp, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+  drawContours(image.mask, contours, -1, cv::Scalar(255), CV_FILLED);
 
-  cv::threshold(temp_depth, static_background, threshold, 1, cv::THRESH_BINARY);
+  image.masked_rgb.create(image.mapped_depth.size());
+  image.masked_depth.create(image.mapped_depth.size());
 
-  cv::GaussianBlur(image.depth, dynamic_background, cv::Size(5,5), 0, 0);
+  for (int r = 0; r < depth.rows; r++) {
+    for (int c = 0; c < depth.cols; c++) {
+      if (image.mask(r, c) == 255) {
+        image.masked_rgb(r, c) = image.rgb.at<cv::Vec3b>(r, c);
+        image.masked_depth(r, c) = image.mapped_depth.at<float>(r, c);
+      } else {
+        image.masked_rgb(r, c) = cv::Vec3b();
+        image.masked_depth(r, c) = 0.0f;
+      }
+    }
+  }
 }
 
 BackgroundFilter::~BackgroundFilter() {

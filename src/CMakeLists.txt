@@ -20,7 +20,7 @@ set(third_party_lib ${LIBFREENECT_LIBRARY} ${OpenCV_LIBS} ${GFlags_LIBS} ${GLOG_
 
 # General compilation flags.
 set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_CXX_FLAGS "-O2")
+set(CMAKE_CXX_FLAGS "-O2 -g")
 add_definitions(-Wall -I${CMAKE_SOURCE_DIR}/src)
 
 # Source directories.

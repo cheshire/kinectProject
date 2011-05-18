@@ -22,7 +22,13 @@ namespace {
   struct EllipticalContourComparison {
     bool operator ()(EllipticalContour const &first,
                      EllipticalContour const &second) {
-      return first.error < second.error;
+      if (first.error == -1) {
+        return false;
+      }
+      if (second.error == -1) {
+        return true;
+      }
+      return (first.error < second.error);
     }
   };
 }
@@ -33,6 +39,12 @@ void OrientationDetector::initialize(){
   createTrackbar("t_angle", "angle", value, (int) (M_PI*1000));
 }
 
+Point OrientationDetector::get_chessboard_centre_in_image(const Mat homography) {
+  Mat inv_h = homography.inv();
+  int cx = (int)(inv_h.at<double>(0,2) / inv_h.at<double>(2,2));
+  int cy = (int)(inv_h.at<double>(1,2) / inv_h.at<double>(2,2));
+  return Point(cx, cy);
+}
 
 bool OrientationDetector::find_orientation_angle(
   const Mat homography,
@@ -73,8 +85,9 @@ bool OrientationDetector::find_orientation_angle(
     Point3d d_h_center = h_center.at(0);
         
     // Center in turntable homogeneous coordinates.
-    Point3f center_h = Mat(homography * Mat(d_h_center)).at<Point3d>(0, 0);    
+    Point3f center_h = Mat(homography * Mat(d_h_center)).at<Point3d>(0, 0);
     
+
     // One element output vector
     vector<Point2f> center_temp;
 
@@ -85,7 +98,8 @@ bool OrientationDetector::find_orientation_angle(
     
     // Circle center in turntable coordinates.
     Point2f center = center_temp.at(0);
-    
+
+
     if (center.x == 0) {
       orientation_angle_[i] = M_PI/2;
     } else {
@@ -113,7 +127,7 @@ bool OrientationDetector::find_orientation_angle(
 }
 
 bool OrientationDetector::create_elliptical_contour(EllipticalContour& result,
-                                                    int min_size) {
+                                                    int min_size, double min_circularity) {
   result.contour_area = cv::contourArea(cv::Mat(result.contour));
 
   // If there are less than 8 contours an ellipse cannot be fitted.
@@ -121,18 +135,13 @@ bool OrientationDetector::create_elliptical_contour(EllipticalContour& result,
     return false;
   }
 
+  float circumference = cv::arcLength(cv::Mat(result.contour), true);
+  result.error = (circumference == 0) ? -1 : (float) (4 * M_PI * result.contour_area / pow(circumference, 2));
+
   cv::RotatedRect ellipse = cv::fitEllipse(cv::Mat(result.contour));
   result.circle_center = ellipse.center;
 
-  // Calculate the difference between the area of the ellipse and the area of
-  // the contour. This should give us an approximate measure of ellipseness.
-  //
-  // The error is divided by the area so it is a proportion (otherwise a small area
-  // would always have a smaller error than a larger area).
-  result.error = abs(ellipse.size.width * ellipse.size.height * M_PI
-      - result.contour_area) / result.contour_area;
-
-  return true;
+  return result.error > min_circularity;
 }
 
 vector<EllipticalContour> OrientationDetector::find_circles(const cv::Mat rgb_image,
@@ -143,15 +152,13 @@ vector<EllipticalContour> OrientationDetector::find_circles(const cv::Mat rgb_im
   int canny_aperture_size){
   
   vector<EllipticalContour> results;
-  cv::Mat gray, edges;
-  cv::cvtColor(rgb_image, gray, CV_BGR2GRAY);
-  cv::GaussianBlur(gray, gray, Size(blur_amount, blur_amount), 2, 2);
-
+  cv::Mat gray, edges, temp;
+  cv::cvtColor(rgb_image, temp, CV_BGR2GRAY);
+  cv::threshold(temp, gray, 60, 255, THRESH_BINARY);
+  cv::erode(gray, gray, Mat());
   // Find edges and contours.
   vector<vector<cv::Point> > contours;
-  cv::Canny(gray, edges, canny_threshold1, canny_threshold2,
-            canny_aperture_size, false);
-  cv::findContours(edges, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);  
+  cv::findContours(gray, contours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
 
   for (size_t i = 0, len = contours.size(); i < len; i++) {
     EllipticalContour result;
@@ -159,7 +166,6 @@ vector<EllipticalContour> OrientationDetector::find_circles(const cv::Mat rgb_im
     bool contour_created = create_elliptical_contour(result);
 
     if (contour_created) {
-      
       cv::drawContours(visualisation, contours, i, RANDOM_COLOR, CV_FILLED);
       
       results.push_back(result);

@@ -35,6 +35,15 @@ public:
     float& orientation_angle
   );
   
+  /**
+   * Returns the coordinates of the chessboard in an image frame.
+   *
+   * @param homography the homography matrix.
+   *
+   * @return point of the chessboard center in an image.
+   */
+  cv::Point get_chessboard_centre_in_image(const cv::Mat homography);
+
   void initialize();
   
 private:
@@ -45,7 +54,8 @@ private:
    * 
    * @return Whether the elliptical contour was found.
    */
-  bool create_elliptical_contour(EllipticalContour &result, int min_size = 400);
+  bool create_elliptical_contour(EllipticalContour &result, int min_size = 500,
+                   double min_circularity = 0.55);
   
   /**
    * Find ellipses in the given image.
@@ -59,7 +69,7 @@ private:
                   cv::Mat visualisation,
                   int blur_amount = 7,
                   int canny_threshold1 = 125,
-                  int canny_threshold2 = 200,
+                  int canny_threshold2 = 150,
                   int canny_aperture_size = 3);
   
   // Helper functions  

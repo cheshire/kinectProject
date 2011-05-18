@@ -15,17 +15,18 @@
 namespace camera {
 
 class BackgroundFilter {
-
-  cv::Mat previous_depth;
-  cv::Mat previous_rgb;
 public:
-  int threshold;
-  cv::Size blur;
-  BackgroundFilter(const Image &image);
+  BackgroundFilter();
   virtual ~BackgroundFilter();
 
-  void filter(const Image &image, cv::Mat &static_background,
-      cv::Mat &dynamic_background, cv::Mat &object);
+  /** Masks all depth and rgb data in an image before the start_depth and after the end_depth.
+   *
+   * @param image image to be filtered.
+   * @param start_depth all pixels before this depth (m) are filtered.
+   * @param end_depth all pixels after this depth (m) are filtered.
+   *
+   */
+  void filter(Image &image, double start_depth, double end_depth);
 
 };
 

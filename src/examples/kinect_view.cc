@@ -57,10 +57,13 @@ int main(int argc, char* argv[]) {
   Mat homography;  
   Mat visualisation;
   
+  float center_depth = 0;
+
   KinectFactory factory;
   ImageCorrector *image_corrector;
   ImageSource *device;
   FileWriter writer;
+  BackgroundFilter filter;
   orientationdetector::OrientationDetector orientation_detector;
   orientation_detector.initialize();
   
@@ -96,9 +99,11 @@ int main(int argc, char* argv[]) {
     }
     
     // Any visualisations on top of rgb image.
-    frame.mapped_rgb.copyTo(visualisation); 
+    frame.mapped_rgb.copyTo(visualisation);
     
     if (!homography_found) {
+      frame.masked_rgb = frame.mapped_rgb;
+      frame.masked_depth = frame.mapped_depth;
       homography_found = find_homography(frame.mapped_rgb,
                                          visualisation, homography);
       if (homography_found) {
@@ -111,8 +116,19 @@ int main(int argc, char* argv[]) {
     }
   
     if (homography_found) {
+      if (center_depth == 0) {
+        // If we don't have a depth for the chessboard, calculate it.
+        Point center = orientation_detector.get_chessboard_centre_in_image(homography);
+
+        center_depth = frame.mapped_depth.at<float>(center.y, center.x);
+        frame.masked_rgb = frame.mapped_rgb;
+        frame.masked_depth = frame.mapped_depth;
+      } else {
+        // If we do have a depth for the chessboard, filter it.
+        filter.filter(frame, center_depth - 0.2, center_depth + 0.2);
+      }
       bool status = orientation_detector.find_orientation_angle(homography,
-        frame.mapped_rgb,
+        frame.masked_rgb,
         visualisation,
         orientation_angle
       );
@@ -122,10 +138,11 @@ int main(int argc, char* argv[]) {
       } else {
         LOG(INFO) << "ANGLE: " << orientation_angle;
       }
+
     }
 
     if (FLAGS_show_gui) {
-      cv::imshow("rgb", frame.mapped_rgb);
+      cv::imshow("rgb", frame.masked_rgb);
       cv::imshow("depth", frame.mapped_depth);
       cv::imshow("visualisation", visualisation);
     }
@@ -223,7 +240,7 @@ int find_homography(const cv::Mat img,
     cv::Mat(chessboard_corners),
     found
   );
-            
+
   if (!(FLAGS_chessboard_height % 2 == 1 
         && FLAGS_chessboard_width % 2 == 1)){
     LOG(ERROR) << "Chessboard with odd number of internal"
