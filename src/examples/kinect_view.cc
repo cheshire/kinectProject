@@ -134,9 +134,9 @@ int main(int argc, char* argv[]) {
       );
       if (!status) {
         // Can't procede without orientation angle.
-        LOG(INFO) << "Skipping incorrect frame";
+//         LOG(INFO) << "Skipping incorrect frame";
       } else {
-        LOG(INFO) << "ANGLE: " << orientation_angle;
+//         LOG(INFO) << "ANGLE: " << orientation_angle;
       }
 
     }

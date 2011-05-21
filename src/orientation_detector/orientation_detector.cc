@@ -2,6 +2,7 @@
 
 #include <cv.h>
 #include <cmath>
+#include <math.h>
 #include <highgui.h>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
@@ -33,10 +34,19 @@ namespace {
   };
 }
 
+OrientationDetector::OrientationDetector(){
+  prev_angle = -1;
+  num_jumps = 0;
+}
+
 void OrientationDetector::initialize(){
-  int *value = new int(0);
+  int *value = new int(0);  
+  
+  prev_angle = -1;
+  num_jumps = 0;
+  
   namedWindow("angle", CV_WINDOW_AUTOSIZE);
-  createTrackbar("t_angle", "angle", value, (int) (M_PI*1000));
+  createTrackbar("t_angle", "angle", value, (int) (2*M_PI*1000));
 }
 
 Point OrientationDetector::get_chessboard_centre_in_image(const Mat homography) {
@@ -61,7 +71,7 @@ bool OrientationDetector::find_orientation_angle(
   // (Up to) two angles corresponding (up to) two circles.
   float orientation_angle_[2];
 
-  LOG(INFO) << "Found " << contours.size() << " ellipses.";
+//   LOG(INFO) << "Found " << contours.size() << " ellipses.";
     
   // If we have more then 2 ellipses - something is wrong.
   // If we don't see any - something is wrong as well.
@@ -115,19 +125,66 @@ bool OrientationDetector::find_orientation_angle(
   if (contours.size() == 2) {
     // If everything went right, two found angles should be (almost) exactly
     
-    LOG(INFO) << "Two circles were seen, angles are "
-              << orientation_angle_[0] << " and " << orientation_angle_[1];
+/*    LOG(INFO) << "Two circles were seen, angles are "
+              << orientation_angle_[0] << " and " << orientation_angle_[1];*/
     orientation_angle = (orientation_angle_[0] + orientation_angle_[1]) / 2;
   } else {
     orientation_angle = orientation_angle_[0];
   }
-  setTrackbarPos("t_angle", "angle", (int) ((orientation_angle + (M_PI/2)) * 1000));
+  
+  float corrected_angle;
+  bool status = correct_rotation_angle(orientation_angle, corrected_angle);
+  
+  if (!status) {
+    return false;
+  }
+  
+  setTrackbarPos("t_angle", "angle", (int) ((corrected_angle) * 1000));      
+  return true;
+}
+
+bool OrientationDetector::correct_rotation_angle(
+  float orientation_angle,
+  float &corrected_angle
+){  
+  if (prev_angle == -1) {
+    // Prev_angle was not initialized.
+    prev_angle = orientation_angle + M_PI / 2;
+  }
+    
+  // Move the angle from range [-PI/2, PI/2] to [0, PI].
+  corrected_angle = orientation_angle + M_PI / 2;
+  
+  // Account for the abrupt jumps in atan function - extends
+  // the domain to [0, 2PI].
+  corrected_angle = fmod((corrected_angle + M_PI * num_jumps),
+                         2 * M_PI);  
+  
+  // Let's find whether "jump" occurs here.
+  float delta = fabs(corrected_angle - prev_angle);  
+  if (delta > M_PI / 4 && delta < M_PI / 2) {
+    
+    // This data point is retarded, let's just skip it.
+    // Usually there are 2 or 3 such points per the whole
+    // rotation.
+    return false;
+  } else {
+    if (delta > M_PI / 2) {
+      
+      // Jump occurs between this angle and the previous one.
+      corrected_angle = fmod(corrected_angle + M_PI, M_PI * 2);      
+      num_jumps++;
+    }
+
+    prev_angle = corrected_angle;
+  }
   
   return true;
 }
 
 bool OrientationDetector::create_elliptical_contour(EllipticalContour& result,
-                                                    int min_size, double min_circularity) {
+                                                    int min_size,
+                                                    double min_circularity) {
   result.contour_area = cv::contourArea(cv::Mat(result.contour));
 
   // If there are less than 8 contours an ellipse cannot be fitted.

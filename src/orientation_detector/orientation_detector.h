@@ -15,6 +15,8 @@ struct EllipticalContour {
 class OrientationDetector{
   
 public:
+  OrientationDetector();
+  
   /**
    * Get the orientation angle of the turntable.
    * 
@@ -22,9 +24,7 @@ public:
    * from/to LS plane.
    * @param rgb_image Image of the turntable.
    * @param visualisation Anything we might want to visualise.
-   * @param orientation_angle Output param to write orientation angle
-   * into. It is measured in the range of -\pi to +\pi. We can detect
-   * full rotation from an abrupt jump from ~ \pi to ~ -\pi.
+   * @param orientation_angle Angle in range [0, 2*PI].
    * 
    * @return Whether the angle was found.
    */
@@ -46,7 +46,16 @@ public:
 
   void initialize();
   
-private:
+private:    
+  // Previously measured angle
+  // in range [0, 2*PI].
+  float prev_angle;
+  
+  // Number of "jumps" from ~-PI/2
+  // to ~PI/2 (or vice versa). Twice
+  // more then the number of full
+  // rotations.
+  int num_jumps;
   
   /**
    * Tries to fit an ellipse onto a contour, if an ellipse
@@ -71,6 +80,19 @@ private:
                   int canny_threshold1 = 125,
                   int canny_threshold2 = 150,
                   int canny_aperture_size = 3);
+  
+  /**
+   * Coordinates of two points give rotation angle in range from
+   * -PI/2 to + PI/2. We need to extend it to the full rotation range.
+   *
+   * @param current_angle Currently measured angle in range [-PI/2, PI/2].
+   * @param corrected_angle Output param - corrected angle in range [0, 2*PI]
+   *
+   * @return Whether the angle was found.
+   */  
+  bool correct_rotation_angle(float current_measured_angle,
+    float& corrected_angle
+  );    
   
   // Helper functions  
   /**
