@@ -34,11 +34,6 @@ namespace {
   };
 }
 
-OrientationDetector::OrientationDetector(){
-  prev_angle = -1;
-  num_jumps = 0;
-}
-
 void OrientationDetector::initialize(){
   int *value = new int(0);  
   
@@ -64,7 +59,7 @@ bool OrientationDetector::find_orientation_angle(
 ){  
   // Run the contour detection algorithm and detect
   // two black circles on lazy susan.           
-  vector<EllipticalContour> contours = find_circles(rgb_image,
+  vector<EllipticalContour> contours = find_ellipses(rgb_image,
     visualisation
   );
   
@@ -182,31 +177,9 @@ bool OrientationDetector::correct_rotation_angle(
   return true;
 }
 
-bool OrientationDetector::create_elliptical_contour(EllipticalContour& result,
-                                                    int min_size,
-                                                    double min_circularity) {
-  result.contour_area = cv::contourArea(cv::Mat(result.contour));
 
-  // If there are less than 8 contours an ellipse cannot be fitted.
-  if (result.contour_area < min_size || result.contour.size() < 6) {
-    return false;
-  }
-
-  float circumference = cv::arcLength(cv::Mat(result.contour), true);
-  result.error = (circumference == 0) ? -1 : (float) (4 * M_PI * result.contour_area / pow(circumference, 2));
-
-  cv::RotatedRect ellipse = cv::fitEllipse(cv::Mat(result.contour));
-  result.circle_center = ellipse.center;
-
-  return result.error > min_circularity;
-}
-
-vector<EllipticalContour> OrientationDetector::find_circles(const cv::Mat rgb_image,
-  Mat visualisation,
-  int blur_amount,
-  int canny_threshold1,
-  int canny_threshold2, 
-  int canny_aperture_size){
+vector<EllipticalContour> OrientationDetector::find_ellipses(const cv::Mat rgb_image,
+  Mat visualisation){
   
   vector<EllipticalContour> results;
   cv::Mat gray, edges, temp;
@@ -232,6 +205,25 @@ vector<EllipticalContour> OrientationDetector::find_circles(const cv::Mat rgb_im
   sort(results.begin(), results.end(), EllipticalContourComparison());
   return results;  
 }
+
+
+bool OrientationDetector::create_elliptical_contour(EllipticalContour& result) {
+  result.contour_area = cv::contourArea(cv::Mat(result.contour));
+
+  // If there are less than 8 contours an ellipse cannot be fitted.
+  if (result.contour_area < circle_min_size || result.contour.size() < 6) {
+    return false;
+  }
+
+  float circumference = cv::arcLength(cv::Mat(result.contour), true);
+  result.error = (circumference == 0) ? -1 : (float) (4 * M_PI * result.contour_area / pow(circumference, 2));
+
+  cv::RotatedRect ellipse = cv::fitEllipse(cv::Mat(result.contour));
+  result.circle_center = ellipse.center;
+
+  return result.error > min_circularity;
+}
+
 
 template <typename T>
 /**

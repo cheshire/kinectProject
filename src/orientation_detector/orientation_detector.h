@@ -10,12 +10,21 @@ struct EllipticalContour {
   double error;
   cv::Point2f circle_center;
   vector<cv::Point> contour;
-};  
+};
 
 class OrientationDetector{
   
 public:
-  OrientationDetector();
+  OrientationDetector(int circle_min_size_=500, double min_circularity_=0.55) : 
+      min_circularity(min_circularity_),
+      circle_min_size(circle_min_size_),
+      prev_angle(-1),
+      num_jumps(0){};
+  
+  /**
+   * Should be called before anything else.
+   */
+  void initialize();
   
   /**
    * Get the orientation angle of the turntable.
@@ -43,10 +52,16 @@ public:
    * @return point of the chessboard center in an image.
    */
   cv::Point get_chessboard_centre_in_image(const cv::Mat homography);
-
-  void initialize();
-  
+    
 private:    
+  /* PARAMETERS */    
+
+  int circle_min_size;
+  double min_circularity;
+  
+  
+  /* STATE VARIABLES */
+  
   // Previously measured angle
   // in range [0, 2*PI].
   float prev_angle;
@@ -55,16 +70,8 @@ private:
   // to ~PI/2 (or vice versa). Twice
   // more then the number of full
   // rotations.
-  int num_jumps;
+  int num_jumps;    
   
-  /**
-   * Tries to fit an ellipse onto a contour, if an ellipse
-   * was found sets it's center and the possible error to struct.
-   * 
-   * @return Whether the elliptical contour was found.
-   */
-  bool create_elliptical_contour(EllipticalContour &result, int min_size = 500,
-                   double min_circularity = 0.55);
   
   /**
    * Find ellipses in the given image.
@@ -74,12 +81,18 @@ private:
    * 
    * @return vector of found contours.
    */
-  vector<EllipticalContour> find_circles(const cv::Mat rgb_image,
-                  cv::Mat visualisation,
-                  int blur_amount = 7,
-                  int canny_threshold1 = 125,
-                  int canny_threshold2 = 150,
-                  int canny_aperture_size = 3);
+  vector<EllipticalContour> find_ellipses(const cv::Mat rgb_image,
+                  cv::Mat visualisation);
+  
+  
+  /**
+   * Tries to fit an ellipse onto a contour, if an ellipse
+   * was found sets it's center and the possible error to struct.
+   * 
+   * @return Whether the elliptical contour was found.
+   */
+  bool create_elliptical_contour(EllipticalContour &result);
+  
   
   /**
    * Coordinates of two points give rotation angle in range from
