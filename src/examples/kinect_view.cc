@@ -34,17 +34,8 @@ DEFINE_int32(chessboard_width, 3, "Number of internal chessboard corners in widt
 DEFINE_int32(chessboard_height, 3, "Number of internal chessboard corners in height");
 DEFINE_bool(show_gui, true, "Show the images currently processed");
 
-DEFINE_double(canny_threshold1, 100, "Min threshold for Canny function");
-DEFINE_double(canny_threshold2, 200, "Max threshold for Canny function");
-DEFINE_int32(canny_aperture_size, 25, "Size of the aperture for Canny function");
-DEFINE_int32(blur_amount, 1, "Amount of blur to apply");
-
 using namespace camera;
 using namespace std;
-
-namespace { 
-  cv::Scalar MY_COLOR(100);
-}
 
 // Forward declarations, see below for comments.
 int find_homography(const cv::Mat img,
@@ -52,132 +43,6 @@ int find_homography(const cv::Mat img,
                     cv::Mat& homography);
 
 Image get_frame(ImageSource *device, ImageCorrector *corrector);
-
-
-struct EllipticalContour {
-  double contour_area;
-  double error;
-  cv::Point2f circle_center;
-  vector<cv::Point> contour;
-};
-
-struct EllipticalContourComparison {
-  bool operator ()(EllipticalContour const &first,
-                    EllipticalContour const &second) {
-    if (first.error == -1) {
-      return false;
-    }
-    if (second.error == -1) {
-      return true;
-    }
-    return (first.error < second.error);
-  }
-};
-
-
-bool create_elliptical_contour(EllipticalContour& result,
-                              int min_size = 800, // 500
-                              double min_circularity = 0.1) { // 0.55
-  result.contour_area = cv::contourArea(cv::Mat(result.contour));
-
-  // If there are less than 8 contours an ellipse cannot be fitted.
-  
-  // was .size() < 6
-  if (result.contour_area < min_size || result.contour.size() < 1) {
-    return false;
-  }
-
-  float circumference = cv::arcLength(cv::Mat(result.contour), true);
-  result.error = (circumference == 0) ? -1 : (float) (4 * M_PI * result.contour_area / pow(circumference, 2));
-
-  cv::RotatedRect ellipse = cv::fitEllipse(cv::Mat(result.contour));
-  result.circle_center = ellipse.center;
-
-  return result.error > min_circularity;
-}
-
-/*
- * New idea - find the biggest ellipse in rgb space,
- * find circle of interest (ellipse with the same ratio taking some 
- * set proportion of the area (OR we can use the homography matrix
- * and positions of the centers of the circles to do that)
-
- */
-
-vector<EllipticalContour> find_ellipses(const cv::Mat rgb_image,
-  Mat& visualisation,
-  int blur_amount = 1,
-  int canny_threshold1 = 300,
-  int canny_threshold2 = 350, 
-  int canny_aperture_size = 7){
-  
-  vector<EllipticalContour> results;
-  
-  cv::Mat gray, edges;
-//   cv::cvtColor(rgb_image, gray, CV_BGR2GRAY);
-//   cv::GaussianBlur(gray, gray, Size(blur_amount, blur_amount), 2, 2);
-
-  // Find edges and contours.
-  vector<vector<cv::Point> > contours;
-  
-  
-  rgb_image.copyTo(gray);
-  cv::GaussianBlur(gray, gray, Size(blur_amount, blur_amount), 2, 2);
-  
-  cv::Canny(gray,edges, canny_threshold1, canny_threshold2,
-            canny_aperture_size, false);     
-  
-  cv::findContours(edges, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);  
-
-  for (size_t i = 0, len = contours.size(); i < len; i++) {
-    EllipticalContour result;
-    result.contour = contours[i];
-    bool contour_created = create_elliptical_contour(result);
-    
-    if (contour_created) {
-      LOG(INFO) << "Contour created";
-      cv::drawContours(gray, contours, i, cv::Scalar(255), CV_FILLED);
-
-      results.push_back(result);
-    }
-  }
-  
-  cv::drawContours(gray, contours, -1, cv::Scalar(120), CV_FILLED);
- 
-  gray.copyTo(visualisation);
-
-  sort(results.begin(), results.end(), EllipticalContourComparison());
-  return results;  
-}
-
-
-/**
- * Try to find ellipse of the turntable.
- */
-bool find_turntable_ellipse(const cv::Mat depth_image,
-                            cv::Mat& visualisation){
-    // depth_image - Mat1f
-    // rgb_image - Mat3b
-    Mat1b converted_matrix;
-    Mat(depth_image * 255).convertTo(converted_matrix, CV_8U);
-
-//     vector<Mat> merged_frames;
-//     for (int i=0; i<3; i++) {
-//       merged_frames.push_back(float_matrix);
-//     }
-//     Mat merged_depth_image;
-//     cv::merge(merged_frames, merged_depth_image);
-    
-    find_ellipses(converted_matrix, visualisation,
-      FLAGS_blur_amount, 
-      (int)FLAGS_canny_threshold1,
-      (int)FLAGS_canny_threshold2,
-      (int)FLAGS_canny_aperture_size
-    );
-    
-    return true;
-}
-
 
 int main(int argc, char* argv[]) {
   google::ParseCommandLineFlags(&argc, &argv, true);
@@ -191,7 +56,6 @@ int main(int argc, char* argv[]) {
   Image frame;
   Mat homography;  
   Mat visualisation;
-  Mat depth_visualisation;
   
   float center_depth = 0;
 
@@ -219,7 +83,6 @@ int main(int argc, char* argv[]) {
     cv::namedWindow("rgb", CV_WINDOW_AUTOSIZE);
     cv::namedWindow("depth", CV_WINDOW_AUTOSIZE);
     cv::namedWindow("visualisation", CV_WINDOW_AUTOSIZE);
-    cv::namedWindow("depth_visualisation", CV_WINDOW_AUTOSIZE);
   }
 
   std::cout << "Chessboard calibration is required to figure out the "
@@ -239,9 +102,6 @@ int main(int argc, char* argv[]) {
     
     // Any visualisations on top of rgb image.
     frame.mapped_rgb.copyTo(visualisation);
-    frame.mapped_depth.copyTo(depth_visualisation);
-    
-    find_turntable_ellipse(frame.mapped_depth, depth_visualisation);
     
     if (!homography_found) {
       frame.masked_rgb = frame.mapped_rgb;
