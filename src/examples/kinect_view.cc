@@ -147,7 +147,6 @@ int main(int argc, char* argv[]) {
       cv::imshow("rgb", frame.masked_rgb);
       cv::imshow("depth", frame.mapped_depth);
       cv::imshow("visualisation", visualisation);
-      cv::imshow("depth_visualisation", depth_visualisation);
     }
 
     char k = cvWaitKey(10);
